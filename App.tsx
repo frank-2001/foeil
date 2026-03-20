@@ -29,6 +29,7 @@ import TrashScreen from './src/screens/TrashScreen';
 import BudgetManagementScreen from './src/screens/BudgetManagementScreen';
 import BudgetAlertsScreen from './src/screens/BudgetAlertsScreen';
 import StatsScreen from './src/screens/StatsScreen';
+import SupportScreen from './src/screens/SupportScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
 import SourceDetailsScreen from './src/screens/SourceDetailsScreen';
 import { 
@@ -213,6 +214,7 @@ export default function App() {
         <Stack.Screen name="BudgetManagement" component={BudgetManagementScreen} options={{ title: 'Gestion Budget' }} />
         <Stack.Screen name="BudgetAlerts" component={BudgetAlertsScreen} options={{ title: 'Alertes Budgétaires' }} />
         <Stack.Screen name="Stats" component={StatsScreen} options={{ title: 'Statistiques' }} />
+        <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support & Développement' }} />
         <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen} options={{ headerShown: false }} />
         <Stack.Screen name="SourceDetails" component={SourceDetailsScreen} options={{ headerShown: false }} />
       </Stack.Navigator>

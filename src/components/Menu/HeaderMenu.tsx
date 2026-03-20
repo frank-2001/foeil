@@ -41,7 +41,7 @@ export const HeaderMenu = () => {
     { label: 'Mes Sources', desc: 'Gérez vos flux entrants et sortants', icon: Database, screen: 'Sources', color: '#4F46E5' },
     { label: 'Mes Devises', desc: 'Configuration multi-monnaies', icon: Coins, screen: 'Currencies', color: '#F59E0B' },
     { label: 'Mes Obligations', desc: 'Suivi des dettes et créances', icon: FileText, screen: 'Obligations', color: '#10B981' },
-    { label: "Système d'épargne", desc: 'Règles de discipline financière', icon: Sliders, screen: 'SavingsSettings', color: '#EC4899' },
+    // { label: "Système d'épargne", desc: 'Règles de discipline financière', icon: Sliders, screen: 'SavingsSettings', color: '#EC4899' },
     { label: 'Synchronisation', desc: 'Cloud et sauvegarde distante', icon: RefreshCw, screen: 'Sync', color: '#3B82F6' },
   ];
 
@@ -147,7 +147,7 @@ export const HeaderMenu = () => {
                   <Settings stroke={Colors.textSecondary} size={20} />
                   <Text style={styles.miniBtnText}>Paramètres</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.miniBtn}>
+                <TouchableOpacity style={styles.miniBtn} onPress={() => { setVisible(false); navigation.navigate('Support'); }}>
                   <HelpCircle stroke={Colors.textSecondary} size={20} />
                   <Text style={styles.miniBtnText}>Support</Text>
                 </TouchableOpacity>
