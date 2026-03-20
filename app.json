@@ -15,13 +15,18 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "app.foeil.com",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
         "backgroundImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_background.png",
         "monochromeImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/IconKitchen-Output/web/icon-192.png"
@@ -41,7 +46,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/2b10404b-7dda-4e35-b3d1-113def03ccd4"
+      "url": "https://u.expo.dev/2b10404b-7dda-4e35-b3d1-113def03ccd4",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
     }
   }
 }
