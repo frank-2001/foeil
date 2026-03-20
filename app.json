@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "foeil-mobile",
-    "slug": "foeil-mobile",
+    "name": "Foeil",
+    "slug": "foeil",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/IconKitchen-Output/android/play_store_512.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,15 +16,32 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
+        "backgroundImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_background.png",
+        "monochromeImage": "./assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher_monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/IconKitchen-Output/web/icon-192.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2b10404b-7dda-4e35-b3d1-113def03ccd4"
+      }
+    },
+    "owner": "lacrea-devs",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2b10404b-7dda-4e35-b3d1-113def03ccd4"
     }
   }
 }
