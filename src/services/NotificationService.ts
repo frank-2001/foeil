@@ -33,9 +33,10 @@ export class NotificationService {
         sound: true,
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
         hour: 7,
         minute: 0,
+        repeats: true,
       },
     });
 
@@ -47,9 +48,10 @@ export class NotificationService {
         sound: true,
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
         hour: 20,
         minute: 0,
+        repeats: true,
       },
     });
     
