@@ -160,11 +160,15 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       position: 'absolute',
       bottom: 40,
       alignItems: 'center',
+      flex:1
     },
     footerText: {
       fontSize: 12,
       color: colors.textSecondary,
       opacity: 0.6,
+      textAlign:'center',
+      flex:1,
+      width:100
     },
     appName: {
       fontSize: 18,

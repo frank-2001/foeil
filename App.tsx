@@ -17,6 +17,7 @@ import { NotificationService } from './src/services/NotificationService';
 import { LockScreen } from './src/components/Auth/LockScreen';
 import { VersionService } from './src/services/VersionService';
 import { UpdateModal } from './src/components/Modals/UpdateModal';
+import { OtaIndicator } from './src/components/Modals/OtaIndicator';
 
 // Ecrans
 import HomeScreen from './src/screens/HomeScreen';
@@ -277,7 +278,10 @@ export default function App() {
         </View>
       )}
 
-      {/* Mandatory Hard Update Modal overlays everything */}
+      {/* Floating OTA Progress indicator */}
+      <OtaIndicator />
+
+      {/* Mandatory Update or OTA Update Modal overlays everything */}
       {updateInfo && (
         <UpdateModal 
           visible={!!updateInfo}

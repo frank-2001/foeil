@@ -1,20 +1,38 @@
-export const formatCompactNumber = (value: number): string => {
-  if (value === 0) return '0';
-  
-  const absValue = Math.abs(value);
-  const sign = value < 0 ? '-' : '';
+export const formatCompactNumber = (
+  value: number,
+  currency: string = 'USD'
+): string => {
+  let suffix = '';
+  let shortValue = value;
 
-  let res = '';
-  if (absValue >= 1000000000) {
-    res = (absValue / 1000000000).toFixed(1).replace(/\.0$/, '') + 'Md';
-  } else if (absValue >= 1000000) {
-    res = (absValue / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  } else {
-    res = absValue.toFixed(1).replace(/\.0$/, '');
+  if (value >= 1_000_000_000) {
+    shortValue = value / 1_000_000_000;
+    suffix = ' Md';
+  } else if (value >= 1_000_000) {
+    shortValue = value / 1_000_000;
+    suffix = ' M';
+  } else if (value >= 1_000) {
+    shortValue = value / 1_000;
+    suffix = ' K';
   }
-  
-  // Replace dot with comma for certain locales (French convention)
-  return sign + res.replace('.', ',');
+
+  // Format du nombre
+  const numberFormatted = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  }).format(shortValue);
+
+  // Récupérer le symbole de la devise
+  const currencySymbol = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+    .formatToParts(0)
+    .find(part => part.type === 'currency')?.value;
+
+  return `${numberFormatted}${suffix} ${currencySymbol}`;
 };
 
 export const formatCurrency = (value: number): string => {

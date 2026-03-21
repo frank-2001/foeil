@@ -124,7 +124,8 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'income
 
   const handleSubmit = async () => {
     const isObligationPayment = selectedObligation !== null;
-    if (!amount || !selectedCurrency || (!selectedSource && !isObligationPayment)) {
+    const isProjectLinked = selectedProject !== null;
+    if (!amount || !selectedCurrency || (!selectedSource && !isObligationPayment && !isProjectLinked)) {
       Alert.alert('Erreur', 'Veuillez remplir les champs obligatoires (Montant, Devise, Source)');
       return;
     }
@@ -493,7 +494,7 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'income
 
             <View style={styles.inputGroup}>
               <View style={styles.sourceLabelRow}>
-                <Text style={[styles.label, { marginBottom: 0, color: colors.ink }]}>Source / Origine</Text>
+                <Text style={[styles.label, { marginBottom: 0, color: colors.ink }]}>Source / Origine {selectedProject ? '(Optionnel)' : ''}</Text>
                 {selectedProject && (
                   <View style={[styles.projectSourceTag, { backgroundColor: colors.success + '15' }]}>
                     <Target stroke={colors.success} size={12} />
@@ -504,8 +505,13 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'income
               <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setPickerType('source')}>
                 <View style={[styles.row, { flex: 1 }]}>
                   <Landmark stroke={colors.accent} size={20} />
-                  <Text style={[styles.pickerText, { color: colors.text }]} numberOfLines={1}>{selectedSource ? selectedSource.name : 'Sélectionner une source'}</Text>
+                  <Text style={[styles.pickerText, { color: colors.text }]} numberOfLines={1}>{selectedSource ? selectedSource.name : (selectedProject ? 'Aucune source (Optionnel)' : 'Sélectionner une source')}</Text>
                 </View>
+                {selectedSource && selectedProject && (
+                  <TouchableOpacity onPress={() => setSelectedSource(null)} style={{ marginRight: 10 }}>
+                    <X size={16} stroke={colors.danger} />
+                  </TouchableOpacity>
+                )}
                 <ChevronDown stroke={colors.textSecondary} size={20} />
               </TouchableOpacity>
             </View>

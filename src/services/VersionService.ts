@@ -1,12 +1,14 @@
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
+import { Alert } from 'react-native';
 
 interface VersionInfo {
   latest_version: string;
   force_full_update: boolean;
   download_url: string;
   release_notes: string;
+  is_ota?: boolean;
 }
 // const DEV_API = 'http://10.39.169.186:8000/api';
 
@@ -53,6 +55,12 @@ export class VersionService {
         if (needsUpdate && data.force_full_update) {
           // Hard update required, return info to show the modal
           return data;
+        }
+        if (needsUpdate && !data.force_full_update) {
+          // OTA update required. Trigger fetch dynamically without blocking.
+          // OtaIndicator component will catch the state and show progress over the app.
+          Updates.fetchUpdateAsync().catch((err) => console.log('Silently failed to fetch OTA:', err));
+          return null;
         }
       }
     } catch (error) {

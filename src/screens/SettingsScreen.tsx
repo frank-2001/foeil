@@ -18,10 +18,12 @@ import {
   Shield, 
   Bell, 
   Info,
-  ChevronRight
+  ChevronRight,
+  Download
 } from 'lucide-react-native';
 
 import { useTheme } from '../context/ThemeContext';
+import { VersionService } from '../services/VersionService';
 
 const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: string, colors: any }) => (
   <View style={styles.headerContainer}>
@@ -33,6 +35,19 @@ const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: st
 export default function SettingsScreen() {
   const { colors, isDark, setDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(true);
+
+  const handleCheckUpdates = async () => {
+    try {
+      const result = await VersionService.checkForUpdates();
+      if (result) {
+        Alert.alert("Mise à jour requise", "Une mise à jour majeure est disponible. Veuillez relancer l'application pour procéder au téléchargement.");
+      } else {
+        Alert.alert("Vérification en cours", "Recherche terminée. S'il y a une mise à jour mineure, elle apparaitra en haut de l'écran.");
+      }
+    } catch (e) {
+      Alert.alert("Erreur", "Vérification impossible.");
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -115,6 +130,19 @@ export default function SettingsScreen() {
               <Text style={[styles.settingLabel, { color: colors.text }]}>Version</Text>
               <Text style={styles.settingDesc}>FOEIL Mobile v1.0.4 (Bêta)</Text>
             </View>
+          </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <TouchableOpacity style={styles.settingRow} onPress={handleCheckUpdates}>
+            <View style={[styles.iconBox, { backgroundColor: isDark ? colors.accent + '20' : '#E0E7FF' }]}>
+              <Download size={22} stroke={colors.accent} />
+            </View>
+            <View style={styles.flex1}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Rechercher des MAJ</Text>
+              <Text style={styles.settingDesc}>Vérifier les nouvelles fonctionnalités OTA</Text>
+            </View>
+            <ChevronRight size={20} stroke={colors.textSecondary} />
           </TouchableOpacity>
         </Card>
       </ScrollView>

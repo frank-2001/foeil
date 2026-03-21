@@ -415,7 +415,7 @@ export class FinancialEngine {
        FROM transactions t
        JOIN sources s ON t.source_id = s.id
        LEFT JOIN projects p ON s.project_id = p.id
-       WHERE t.type = 'income'
+       WHERE t.type = 'income' AND t.nature != 'virtual'
        GROUP BY t.source_id
        ORDER BY total_earned DESC
        LIMIT 1`
@@ -447,14 +447,14 @@ export class FinancialEngine {
         `SELECT s.name, SUM(t.amount_main_currency) as total 
          FROM transactions t 
          JOIN sources s ON t.source_id = s.id 
-         WHERE t.type = 'income' AND t.transaction_date >= date('now', '-7 days')
+         WHERE t.type = 'income' AND t.nature != 'virtual' AND t.transaction_date >= date('now', '-7 days')
          GROUP BY s.id ORDER BY total DESC LIMIT 3`
       ),
       weeklyTopExpense: await db.getAllAsync<any>(
         `SELECT s.name, SUM(t.amount_main_currency) as total 
          FROM transactions t 
          JOIN sources s ON t.source_id = s.id 
-         WHERE t.type = 'expense' AND t.transaction_date >= date('now', '-7 days')
+         WHERE t.type = 'expense' AND t.nature != 'virtual' AND t.transaction_date >= date('now', '-7 days')
          GROUP BY s.id ORDER BY total DESC LIMIT 3`
       )
     };
@@ -495,7 +495,7 @@ export class FinancialEngine {
       `SELECT s.name, SUM(t.amount_main_currency) as total 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.type = 'income' ${dateFilter}
+       WHERE t.type = 'income' AND t.nature != 'virtual' ${dateFilter}
        GROUP BY s.id ORDER BY total DESC LIMIT 5`
     );
 
@@ -504,15 +504,15 @@ export class FinancialEngine {
       `SELECT s.name, SUM(t.amount_main_currency) as total 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.type = 'expense' ${dateFilter}
+       WHERE t.type = 'expense' AND t.nature != 'virtual' ${dateFilter}
        GROUP BY s.id ORDER BY total DESC LIMIT 5`
     );
 
     // Project Performance (Budget impact in period)
     const projectPerformance = await db.getAllAsync<any>(
       `SELECT p.name, p.estimated_cost, 
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='expense' ${dateFilter.replace('t.', '')}) as current_spend,
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='income' ${dateFilter.replace('t.', '')}) as current_income
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='expense' AND nature != 'virtual' ${dateFilter.replace('t.', '')}) as current_spend,
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='income' AND nature != 'virtual' ${dateFilter.replace('t.', '')}) as current_income
        FROM projects p`
     );
 
@@ -523,8 +523,8 @@ export class FinancialEngine {
     const db = await getDatabase();
     const result = await db.getFirstAsync<any>(
       `SELECT 
-        SUM(CASE WHEN type='income' THEN amount_main_currency ELSE 0 END) as total_income,
-        SUM(CASE WHEN type='expense' THEN amount_main_currency ELSE 0 END) as total_expense,
+        SUM(CASE WHEN type='income' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_income,
+        SUM(CASE WHEN type='expense' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_expense,
         COUNT(*) as count
        FROM transactions WHERE source_id = ?`,
       [sourceId]
@@ -537,8 +537,8 @@ export class FinancialEngine {
     const result = await db.getFirstAsync<any>(
       `SELECT 
         p.name, p.estimated_cost, p.expected_roi,
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = ? AND type='income') as total_income,
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = ? AND type='expense') as total_expense
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = ? AND type='income' AND nature != 'virtual') as total_income,
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = ? AND type='expense' AND nature != 'virtual') as total_expense
        FROM projects p WHERE p.id = ?`,
       [projectId, projectId, projectId]
     );
@@ -561,7 +561,7 @@ export class FinancialEngine {
     const avgExpense = await db.getFirstAsync<any>(
       `SELECT AVG(total_month) as avg 
        FROM (SELECT SUM(amount_main_currency) as total_month 
-             FROM transactions WHERE type='expense' 
+             FROM transactions WHERE type='expense' AND nature != 'virtual'
              GROUP BY strftime('%Y-%m', transaction_date))`
     );
     const monthlyBurn = avgExpense?.avg || 1; // Avoid div by 0
@@ -572,7 +572,7 @@ export class FinancialEngine {
       `SELECT s.category, SUM(t.amount_main_currency) as total 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.type = 'expense' ${dateFilter}
+       WHERE t.type = 'expense' AND t.nature != 'virtual' ${dateFilter}
        GROUP BY s.category`
     );
 
@@ -610,8 +610,8 @@ export class FinancialEngine {
     // 2. Stats
     const stats = await db.getFirstAsync<any>(
       `SELECT 
-        SUM(CASE WHEN type='income' THEN amount_main_currency ELSE 0 END) as total_income,
-        SUM(CASE WHEN type='expense' THEN amount_main_currency ELSE 0 END) as total_expense
+        SUM(CASE WHEN type='income' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_income,
+        SUM(CASE WHEN type='expense' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_expense
        FROM transactions WHERE project_id = ?`,
       [projectId]
     );
@@ -621,7 +621,7 @@ export class FinancialEngine {
       `SELECT s.category, COUNT(*) as count 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.project_id = ? AND t.type='expense' 
+       WHERE t.project_id = ? AND t.type='expense' AND t.nature != 'virtual' 
        GROUP BY s.category ORDER BY count DESC LIMIT 1`,
       [projectId]
     );
@@ -631,7 +631,7 @@ export class FinancialEngine {
       `SELECT s.name, SUM(t.amount_main_currency) as total 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.project_id = ? AND t.type='income' 
+       WHERE t.project_id = ? AND t.type='income' AND t.nature != 'virtual'
        GROUP BY s.id ORDER BY total DESC LIMIT 1`,
       [projectId]
     );
@@ -639,8 +639,8 @@ export class FinancialEngine {
     // 5. Sub-projects
     const subProjects = await db.getAllAsync<any>(
       `SELECT p.*,
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='income') as total_income,
-        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='expense') as total_expense
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='income' AND nature != 'virtual') as total_income,
+        (SELECT SUM(amount_main_currency) FROM transactions WHERE project_id = p.id AND type='expense' AND nature != 'virtual') as total_expense
        FROM projects p WHERE p.parent_id = ?`,
       [projectId]
     );
@@ -676,8 +676,8 @@ export class FinancialEngine {
     // 2. Stats
     const stats = await db.getFirstAsync<any>(
       `SELECT 
-        SUM(CASE WHEN type='income' THEN amount_main_currency ELSE 0 END) as total_income,
-        SUM(CASE WHEN type='expense' THEN amount_main_currency ELSE 0 END) as total_expense
+        SUM(CASE WHEN type='income' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_income,
+        SUM(CASE WHEN type='expense' AND nature != 'virtual' THEN amount_main_currency ELSE 0 END) as total_expense
        FROM transactions t WHERE source_id = ? ${dateFilter}`,
       [sourceId]
     );
@@ -687,7 +687,7 @@ export class FinancialEngine {
       `SELECT s.category, SUM(t.amount_main_currency) as total 
        FROM transactions t 
        JOIN sources s ON t.source_id = s.id 
-       WHERE t.source_id = ? AND t.type='expense' ${dateFilter}
+       WHERE t.source_id = ? AND t.type='expense' AND t.nature != 'virtual' ${dateFilter}
        GROUP BY s.category`,
       [sourceId]
     );

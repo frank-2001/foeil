@@ -224,6 +224,7 @@ export default function HomeScreen() {
   const { balance, recentTransactions, obligations, topSource } = stats;
   const debt = obligations.total_debt || 0;
   const receivable = obligations.total_receivable || 0;
+  const mainCurrencyCode = stats.currencies?.find((c: any) => c.is_main)?.code || 'USD';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -312,14 +313,13 @@ export default function HomeScreen() {
                   if (curr.is_main) {
                     return (
                       <Text key={curr.id} style={[styles.mainBalanceValue, { color: colors.ink }]}>
-                        {formatCompactNumber(val)}
-                        <Text style={[styles.mainBalanceCode, { color: colors.textSecondary }]}> {curr.code}</Text>
+                        {formatCompactNumber(val, curr.code)}
                       </Text>
                     );
                   }
                   return (
                     <Text key={curr.id} style={[styles.secondaryBalanceValue, { color: colors.textSecondary }]}>
-                      {formatCompactNumber(val)} {curr.code}
+                      {formatCompactNumber(val, curr.code)}
                     </Text>
                   );
                 })}
@@ -338,7 +338,7 @@ export default function HomeScreen() {
             {stats.weeklyTopIncome?.map((itm: any, i: number) => (
               <View key={i} style={styles.perfRow}>
                 <Text style={[styles.perfName, { color: colors.ink }]} numberOfLines={1}>{itm.name}</Text>
-                <Text style={[styles.perfValue, { color: colors.success }]}>+{formatCompactNumber(itm.total)}$</Text>
+                <Text style={[styles.perfValue, { color: colors.success }]}>+{formatCompactNumber(itm.total, mainCurrencyCode)}</Text>
               </View>
             ))}
           </View>
@@ -351,7 +351,7 @@ export default function HomeScreen() {
             {stats.weeklyTopExpense?.map((itm: any, i: number) => (
               <View key={i} style={styles.perfRow}>
                 <Text style={[styles.perfName, { color: colors.ink }]} numberOfLines={1}>{itm.name}</Text>
-                <Text style={[styles.perfValue, { color: colors.danger }]}>-{formatCompactNumber(itm.total)}$</Text>
+                <Text style={[styles.perfValue, { color: colors.danger }]}>-{formatCompactNumber(itm.total, mainCurrencyCode)}</Text>
               </View>
             ))}
           </View>
@@ -365,7 +365,7 @@ export default function HomeScreen() {
             </View>
             <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Dettes (Restant)</Text>
             <Text style={[styles.miniValue, { color: colors.danger }]}>
-              -{formatCompactNumber(debt ?? 0)} $
+              -{formatCompactNumber(debt ?? 0, mainCurrencyCode)}
             </Text>
             <View style={styles.indicatorItem}>
                <ShieldAlert stroke={colors.danger} size={11} />
@@ -378,7 +378,7 @@ export default function HomeScreen() {
               <HandCoins stroke={colors.success} size={20} />
             </View>
             <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Créances</Text>
-            <Text style={[styles.miniValue, { color: colors.success }]}>+{formatCompactNumber(receivable ?? 0)} $</Text>
+            <Text style={[styles.miniValue, { color: colors.success }]}>+{formatCompactNumber(receivable ?? 0, mainCurrencyCode)}</Text>
             <View style={styles.indicatorItem}>
                <TrendingUp stroke={colors.success} size={11} />
                <Text style={[styles.indicatorText, { color: colors.success }]}>À recevoir</Text>
@@ -407,7 +407,7 @@ export default function HomeScreen() {
                 )}
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={[styles.topSourceValue, { color: colors.success }]}>+{formatCompactNumber(topSource.total_earned ?? 0)} $</Text>
+                <Text style={[styles.topSourceValue, { color: colors.success }]}>+{formatCompactNumber(topSource.total_earned ?? 0, mainCurrencyCode)}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -440,7 +440,7 @@ export default function HomeScreen() {
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={[styles.activityAmount, { color: tx.type === 'income' ? colors.success : colors.text }]}>
-                  {tx.type === 'income' ? '+' : '-'}{formatCompactNumber(tx.amount_original ?? 0)} {tx.currency_code}
+                  {tx.type === 'income' ? '+' : '-'}{formatCompactNumber(tx.amount_original ?? 0,tx.currency_code)}
                 </Text>
                 <ChevronRight stroke={colors.textSecondary + '40'} size={16} />
               </View>
