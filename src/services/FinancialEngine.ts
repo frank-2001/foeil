@@ -333,12 +333,16 @@ export class FinancialEngine {
     
     // 1. Basic Balance
     const balance = await db.getFirstAsync<SavingsBalance>('SELECT * FROM savings_balance LIMIT 1');
+
+    // 1b. Currencies
+    const currencies = await db.getAllAsync<any>('SELECT * FROM currencies ORDER BY is_main DESC, code ASC');
     
     // 2. Recent Transactions
     const recentTransactions = await db.getAllAsync<any>(
-      `SELECT t.*, s.name as source_name 
+      `SELECT t.*, s.name as source_name, c.code as currency_code
        FROM transactions t 
        LEFT JOIN sources s ON t.source_id = s.id 
+       LEFT JOIN currencies c ON t.currency_id = c.id
        ORDER BY t.transaction_date DESC LIMIT 5`
     );
 
@@ -379,6 +383,7 @@ export class FinancialEngine {
     }
     return {
       balance: balance || { total_essential: 0, total_personal: 0, total_investment: 0 },
+      currencies: currencies || [],
       recentTransactions,
       obligations: obligations || { total_debt: 0, total_receivable: 0 },
       topSource,
@@ -542,9 +547,10 @@ export class FinancialEngine {
     
     // 1. All Transactions for this project
     const transactions = await db.getAllAsync<any>(
-      `SELECT t.*, s.name as source_name 
+      `SELECT t.*, s.name as source_name, c.code as currency_code 
        FROM transactions t 
        LEFT JOIN sources s ON t.source_id = s.id 
+       LEFT JOIN currencies c ON t.currency_id = c.id
        WHERE t.project_id = ? 
        ORDER BY t.transaction_date DESC`,
       [projectId]
@@ -607,9 +613,10 @@ export class FinancialEngine {
 
     // 1. Transactions
     const transactions = await db.getAllAsync<any>(
-      `SELECT t.*, p.name as project_name 
+      `SELECT t.*, p.name as project_name, c.code as currency_code 
        FROM transactions t 
        LEFT JOIN projects p ON t.project_id = p.id 
+       LEFT JOIN currencies c ON t.currency_id = c.id
        WHERE t.source_id = ? ${dateFilter}
        ORDER BY t.transaction_date DESC`,
       [sourceId]

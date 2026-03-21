@@ -7,18 +7,30 @@ interface CardProps {
   style?: StyleProp<ViewStyle>;
 }
 
+import { useTheme } from '../context/ThemeContext';
+
 export const Card = ({ children, style }: CardProps) => {
-  return <View style={[styles.card, style]}>{children}</View>;
+  const { colors } = useTheme();
+  
+  return (
+    <View style={[
+      styles.card, 
+      { 
+        backgroundColor: colors.paper, 
+        borderColor: colors.border 
+      }, 
+      style
+    ]}>
+      {children}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.paper,
-    borderRadius: 16,
+    borderRadius: 24,
     padding: Spacing.md,
-    ...Shadows.paper,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
 });

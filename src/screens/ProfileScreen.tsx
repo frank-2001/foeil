@@ -25,15 +25,17 @@ import {
 } from 'lucide-react-native';
 import { DatabaseService } from '../services/DatabaseService';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
 
-const ScreenHeader = ({ title, subtitle }: { title: string, subtitle: string }) => (
+const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: string, colors: any }) => (
   <View style={styles.headerContainer}>
-    <Text style={styles.headerSubtitle}>{subtitle}</Text>
-    <Text style={styles.headerTitle}>{title}</Text>
+    <Text style={[styles.headerSubtitle, { color: colors.accent }]}>{subtitle}</Text>
+    <Text style={[styles.headerTitle, { color: colors.ink }]}>{title}</Text>
   </View>
 );
 
 export default function ProfileScreen() {
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<any>();
   const [stats, setStats] = useState({ transactions: 0, projects: 0 });
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export default function ProfileScreen() {
 
   const loadStats = async () => {
     try {
-      const db = await DatabaseService.getAllProjects(); // Reusing projects just for demo or count
+      const db = await DatabaseService.getAllProjects();
       const tx = await DatabaseService.getSavingsBalance(); 
       setStats({ 
         projects: db.length, 
@@ -83,71 +85,69 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.listContent}>
-        {/* <ScreenHeader title="Profil" subtitle="Votre Identité Financière" /> */}
-
         <View style={styles.profileHero}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
+            <View style={[styles.avatar, { backgroundColor: colors.ink }]}>
                <Image 
                 source={require('../../assets/IconKitchen-Output/android/res/mipmap-xxxhdpi/ic_launcher.png')} 
                 style={{ width: 80, height: 80, borderRadius: 20 }} 
                 resizeMode="contain"
                />
             </View>
-            <View style={styles.badgeContainer}>
+            <View style={[styles.badgeContainer, { backgroundColor: colors.accent, borderColor: colors.background }]}>
               <ShieldAlert size={14} stroke="#FFF" />
             </View>
           </View>
-          <Text style={styles.userName}>Utilisateur FOEIL</Text>
-          <Text style={styles.userEmail}>user@foeil.app</Text>
+          <Text style={[styles.userName, { color: colors.ink }]}>Utilisateur FOEIL</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>user@foeil.app</Text>
         </View>
 
         <View style={styles.statsGrid}>
           <Card style={styles.statCard}>
-            <Text style={styles.statVal}>{stats.projects}</Text>
-            <Text style={styles.statLabel}>Projets</Text>
+            <Text style={[styles.statVal, { color: colors.ink }]}>{stats.projects}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Projets</Text>
           </Card>
           <Card style={styles.statCard}>
-            <Text style={styles.statVal}>Bêta</Text>
-            <Text style={styles.statLabel}>Version</Text>
+            <Text style={[styles.statVal, { color: colors.ink }]}>Bêta</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Version</Text>
           </Card>
         </View>
 
-        <Text style={styles.sectionTitle}>Gestion du Compte</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Gestion du Compte</Text>
         <Card style={styles.menuCard}>
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('BudgetManagement')}>
-            <Zap size={20} stroke={Colors.accent} />
-            <Text style={styles.menuItemText}>Réorganiser le Budget</Text>
+            <Zap size={20} stroke={colors.accent} />
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Réorganiser le Budget</Text>
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Trash')}>
-            <History size={20} stroke={Colors.textSecondary} />
-            <Text style={styles.menuItemText}>Journal d'Activité (Corbeille)</Text>
+            <History size={20} stroke={colors.textSecondary} />
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Journal d'Activité (Corbeille)</Text>
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('BudgetAlerts')}>
-            <ShieldAlert size={20} stroke={Colors.danger} />
-            <Text style={styles.menuItemText}>Dépassements & Alertes</Text>
+            <ShieldAlert size={20} stroke={colors.danger} />
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Dépassements & Alertes</Text>
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Stats')}>
-            <BarChart2 size={20} stroke={Colors.textSecondary} />
-            <Text style={styles.menuItemText}>Statistiques</Text>
+            <BarChart2 size={20} stroke={colors.textSecondary} />
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Statistiques</Text>
           </TouchableOpacity>
         </Card>
 
-        <Text style={[styles.sectionTitle, { color: Colors.danger }]}>Zone de Danger</Text>
-        <Card style={[styles.menuCard, styles.dangerCard]}>
+        <Text style={[styles.sectionTitle, { color: colors.danger }]}>Zone de Danger</Text>
+        <Card style={[styles.menuCard, { borderColor: colors.danger + '40', borderWidth: 1 }]}>
           <TouchableOpacity style={styles.menuItem} onPress={handleFullReset}>
-            <Trash2 size={20} stroke={Colors.danger} />
-            <Text style={[styles.menuItemText, { color: Colors.danger }]}>Réinitialiser toutes les données</Text>
+            <Trash2 size={20} stroke={colors.danger} />
+            <Text style={[styles.menuItemText, { color: colors.danger }]}>Réinitialiser toutes les données</Text>
           </TouchableOpacity>
-          <View style={[styles.divider, { backgroundColor: '#FEE2E2' }]} />
+          <View style={[styles.divider, { backgroundColor: colors.danger + '20' }]} />
           <TouchableOpacity style={styles.menuItem}>
-            <LogOut size={20} stroke={Colors.danger} />
-            <Text style={[styles.menuItemText, { color: Colors.danger }]}>Se déconnecter</Text>
+            <LogOut size={20} stroke={colors.danger} />
+            <Text style={[styles.menuItemText, { color: colors.danger }]}>Se déconnecter</Text>
           </TouchableOpacity>
         </Card>
       </ScrollView>
@@ -156,25 +156,24 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1 },
   listContent: { padding: Spacing.lg, paddingBottom: 100 },
   headerContainer: { marginBottom: 24, marginTop: 10 },
-  headerSubtitle: { color: Colors.accent, fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: Colors.ink, marginTop: 4 },
+  headerSubtitle: { fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', marginTop: 4 },
   profileHero: { alignItems: 'center', marginVertical: 30 },
   avatarContainer: { position: 'relative' },
-  avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.ink, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 10 },
-  badgeContainer: { position: 'absolute', bottom: 0, right: 0, backgroundColor: Colors.accent, width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#F9FAFB' },
-  userName: { fontSize: 22, fontWeight: '900', color: Colors.ink, marginTop: 16 },
-  userEmail: { fontSize: 14, color: Colors.textSecondary, marginTop: 4 },
+  avatar: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 10 },
+  badgeContainer: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 3 },
+  userName: { fontSize: 22, fontWeight: '900', marginTop: 16 },
+  userEmail: { fontSize: 14, marginTop: 4 },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 },
   statCard: { width: '47%', padding: 20, alignItems: 'center', borderRadius: 24 },
-  statVal: { fontSize: 20, fontWeight: '800', color: Colors.ink },
-  statLabel: { fontSize: 12, color: Colors.textSecondary, marginTop: 4, textTransform: 'uppercase' },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: Colors.textSecondary, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4, letterSpacing: 1 },
+  statVal: { fontSize: 20, fontWeight: '800' },
+  statLabel: { fontSize: 12, marginTop: 4, textTransform: 'uppercase' },
+  sectionTitle: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginBottom: 12, marginLeft: 4, letterSpacing: 1 },
   menuCard: { padding: 4, borderRadius: 24, marginBottom: 24 },
-  dangerCard: { borderColor: '#FEE2E2', borderWidth: 1 },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 18 },
-  menuItemText: { flex: 1, fontSize: 16, fontWeight: '700', color: Colors.text, marginLeft: 16 },
-  divider: { height: 1, backgroundColor: '#F3F4F6', marginHorizontal: 16 },
+  menuItemText: { flex: 1, fontSize: 16, fontWeight: '700', marginLeft: 16 },
+  divider: { height: 1, marginHorizontal: 16 },
 });

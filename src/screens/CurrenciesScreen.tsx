@@ -29,15 +29,17 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { DatabaseService } from '../services/DatabaseService';
 import { Currency } from '../database/types';
+import { useTheme } from '../context/ThemeContext';
 
-const ScreenHeader = ({ title, subtitle }: { title: string, subtitle: string }) => (
+const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: string, colors: any }) => (
   <View style={styles.headerContainer}>
-    <Text style={styles.headerSubtitle}>{subtitle}</Text>
-    <Text style={styles.headerTitle}>{title}</Text>
+    <Text style={[styles.headerSubtitle, { color: colors.accent }]}>{subtitle}</Text>
+    <Text style={[styles.headerTitle, { color: colors.ink }]}>{title}</Text>
   </View>
 );
 
 export default function CurrenciesScreen() {
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   
@@ -136,8 +138,8 @@ export default function CurrenciesScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={Colors.accent} />
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -146,12 +148,12 @@ export default function CurrenciesScreen() {
   const otherCurrencies = currencies.filter(c => c.is_main !== 1);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.listContent}>
-        <ScreenHeader title="Mes Devises" subtitle="Taux de Change et Référence" />
+        <ScreenHeader title="Mes Devises" subtitle="Taux de Change et Référence" colors={colors} />
 
         {mainCurrency && (
-          <Card style={styles.mainCurrencyHero}>
+          <Card style={[styles.mainCurrencyHero, { backgroundColor: colors.ink }]}>
             <View style={styles.heroTop}>
               <Text style={styles.heroLabel}>Devise de Référence</Text>
               <TouchableOpacity onPress={() => openEdit(mainCurrency)}>
@@ -160,7 +162,7 @@ export default function CurrenciesScreen() {
             </View>
             <Text style={styles.heroCode}>{mainCurrency.code}</Text>
             <Text style={styles.heroName}>{mainCurrency.name}</Text>
-            <View style={styles.verifiedBadge}>
+            <View style={[styles.verifiedBadge, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
               <ShieldCheck stroke="#FFF" size={14} />
               <Text style={styles.verifiedText}>Système de base (Taux : 1.00)</Text>
             </View>
@@ -168,26 +170,26 @@ export default function CurrenciesScreen() {
         )}
 
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionHeading}>Autres Devises</Text>
-          <RefreshCw stroke={Colors.textSecondary} size={18} />
+          <Text style={[styles.sectionHeading, { color: colors.text }]}>Autres Devises</Text>
+          <RefreshCw stroke={colors.textSecondary} size={18} />
         </View>
 
         {otherCurrencies.map((curr) => (
           <Card key={curr.id} style={styles.currencyItem}>
             <View style={styles.row}>
-              <View style={styles.symbolCircle}>
-                <Text style={styles.symbolText}>{curr.code[0]}</Text>
+              <View style={[styles.symbolCircle, { backgroundColor: colors.background }]}>
+                <Text style={[styles.symbolText, { color: colors.ink }]}>{curr.code[0]}</Text>
               </View>
               <View style={styles.flex1}>
-                <Text style={styles.currName}>{curr.name} ({curr.code})</Text>
-                <Text style={styles.currRate}>1 {mainCurrency?.code} = {curr.exchange_rate_to_main} {curr.code}</Text>
+                <Text style={[styles.currName, { color: colors.text }]}>{curr.name} ({curr.code})</Text>
+                <Text style={[styles.currRate, { color: colors.textSecondary }]}>1 {mainCurrency?.code} = {curr.exchange_rate_to_main} {curr.code}</Text>
               </View>
               <View style={styles.actionRow}>
-                <TouchableOpacity onPress={() => openEdit(curr)} style={styles.actionBtn}>
-                  <Edit3 stroke={Colors.textSecondary} size={18} />
+                <TouchableOpacity onPress={() => openEdit(curr)} style={[styles.actionBtn, { backgroundColor: colors.background }]}>
+                  <Edit3 stroke={colors.textSecondary} size={18} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(curr.id, curr.is_main)} style={[styles.actionBtn, { marginLeft: 8 }]}>
-                  <Trash2 stroke={Colors.danger} size={18} />
+                <TouchableOpacity onPress={() => handleDelete(curr.id, curr.is_main)} style={[styles.actionBtn, { marginLeft: 8, backgroundColor: colors.background }]}>
+                  <Trash2 stroke={colors.danger} size={18} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -196,39 +198,39 @@ export default function CurrenciesScreen() {
 
         {otherCurrencies.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Text style={{ color: Colors.textSecondary }}>Aucune autre devise configurée</Text>
+            <Text style={{ color: colors.textSecondary }}>Aucune autre devise configurée</Text>
           </View>
         )}
       </ScrollView>
 
       <TouchableOpacity 
-        style={styles.mainFab} 
+        style={[styles.mainFab, { backgroundColor: colors.ink }]} 
         onPress={() => { resetForm(); setModalVisible(true); }}
       >
-        <Plus stroke="#FFF" size={32} strokeWidth={2.5} />
+        <Plus stroke={colors.paper} size={32} strokeWidth={2.5} />
       </TouchableOpacity>
 
-      {/* Modal Add/Edit Currency */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.paper }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editingId ? 'Modifier' : 'Ajouter'} Devise</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                <X stroke={Colors.ink} size={24} />
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>{editingId ? 'Modifier' : 'Ajouter'} Devise</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.closeBtn, { backgroundColor: colors.background }]}>
+                <X stroke={colors.ink} size={24} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.rowBetween}>
                 <View style={[styles.formGroup, { width: '30%' }]}>
-                  <Text style={styles.label}>Code</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Code</Text>
                   <TextInput 
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.background, color: colors.ink, borderColor: colors.border }]}
                     placeholder="USD"
+                    placeholderTextColor={colors.textSecondary + '70'}
                     maxLength={3}
                     autoCapitalize="characters"
                     value={code}
@@ -236,10 +238,11 @@ export default function CurrenciesScreen() {
                   />
                 </View>
                 <View style={[styles.formGroup, { width: '65%' }]}>
-                  <Text style={styles.label}>Nom Complet</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Nom Complet</Text>
                   <TextInput 
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.background, color: colors.ink, borderColor: colors.border }]}
                     placeholder="Dollar Américain"
+                    placeholderTextColor={colors.textSecondary + '70'}
                     value={name}
                     onChangeText={setName}
                   />
@@ -248,12 +251,13 @@ export default function CurrenciesScreen() {
 
               {!isMain && (
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>Taux de d'échange (1 {mainCurrency?.code} = ...)</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Taux de d'échange (1 {mainCurrency?.code} = ...)</Text>
                   <View style={styles.rateInputRow}>
-                    <Zap stroke={Colors.warning} size={20} style={styles.inputIcon} />
+                    <Zap stroke={colors.warning} size={20} style={styles.inputIcon} />
                     <TextInput 
-                      style={[styles.input, { flex: 1, paddingLeft: 45 }]}
+                      style={[styles.input, { flex: 1, paddingLeft: 45, backgroundColor: colors.background, color: colors.ink, borderColor: colors.border }]}
                       placeholder="0.00"
+                      placeholderTextColor={colors.textSecondary + '70'}
                       keyboardType="numeric"
                       value={rate}
                       onChangeText={setRate}
@@ -262,21 +266,21 @@ export default function CurrenciesScreen() {
                 </View>
               )}
 
-              <View style={styles.isMainRow}>
+              <View style={[styles.isMainRow, { backgroundColor: colors.background }]}>
                 <View style={styles.flex1}>
-                  <Text style={styles.isMainLabel}>Devise de Référence</Text>
-                  <Text style={styles.isMainDesc}>Définit cette devise comme base pour tous les calculs de l'application.</Text>
+                  <Text style={[styles.isMainLabel, { color: colors.ink }]}>Devise de Référence</Text>
+                  <Text style={[styles.isMainDesc, { color: colors.textSecondary }]}>Définit cette devise comme base pour tous les calculs de l'application.</Text>
                 </View>
                 <Switch 
                   value={isMain} 
                   onValueChange={setIsMain}
-                  trackColor={{ false: '#D1D5DB', true: Colors.accent }}
+                  trackColor={{ false: '#D1D5DB', true: colors.accent }}
                 />
               </View>
 
-              <TouchableOpacity style={styles.submitBtn} onPress={handleSave}>
-                <Check stroke="#FFF" size={24} strokeWidth={3} />
-                <Text style={styles.submitBtnText}>Enregistrer la Devise</Text>
+              <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.ink }]} onPress={handleSave}>
+                <Check stroke={colors.paper} size={24} strokeWidth={3} />
+                <Text style={[styles.submitBtnText, { color: colors.paper }]}>Enregistrer la Devise</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -287,46 +291,46 @@ export default function CurrenciesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: Spacing.lg, paddingBottom: 140 },
   headerContainer: { marginBottom: 24, marginTop: 10 },
-  headerSubtitle: { color: Colors.accent, fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: Colors.ink, marginTop: 4 },
-  mainCurrencyHero: { backgroundColor: Colors.ink, padding: 32, alignItems: 'center', borderRadius: 32, marginBottom: 30 },
+  headerSubtitle: { fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', marginTop: 4 },
+  mainCurrencyHero: { padding: 32, alignItems: 'center', borderRadius: 32, marginBottom: 30 },
   heroTop: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   heroLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
   heroCode: { color: '#FFF', fontSize: 64, fontWeight: '900', marginVertical: 4 },
   heroName: { color: '#FFF', fontSize: 18, opacity: 0.8, fontWeight: '600' },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, marginTop: 20 },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, marginTop: 20 },
   verifiedText: { color: '#FFF', fontSize: 11, marginLeft: 8, fontWeight: '700' },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionHeading: { fontSize: 18, fontWeight: '800', color: Colors.text },
+  sectionHeading: { fontSize: 18, fontWeight: '800' },
   currencyItem: { padding: 18, marginBottom: 12, borderRadius: 24 },
   row: { flexDirection: 'row', alignItems: 'center' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   flex1: { flex: 1 },
-  symbolCircle: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  symbolText: { fontSize: 20, fontWeight: '800', color: Colors.ink },
-  currName: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  currRate: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  symbolCircle: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  symbolText: { fontSize: 20, fontWeight: '800' },
+  currName: { fontSize: 16, fontWeight: '700' },
+  currRate: { fontSize: 13, marginTop: 2 },
   actionRow: { flexDirection: 'row' },
-  actionBtn: { padding: 8, backgroundColor: '#F3F4F6', borderRadius: 12 },
+  actionBtn: { padding: 8, borderRadius: 12 },
   emptyContainer: { padding: 40, alignItems: 'center' },
-  mainFab: { position: 'absolute', bottom: 120, right: 30, backgroundColor: Colors.ink, width: 64, height: 64, borderRadius: 22, justifyContent: 'center', alignItems: 'center', elevation: 8 },
+  mainFab: { position: 'absolute', bottom: 120, right: 30, width: 64, height: 64, borderRadius: 22, justifyContent: 'center', alignItems: 'center', elevation: 8 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 30, paddingBottom: 50, maxHeight: '90%' },
+  modalContent: { borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 30, paddingBottom: 50, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 },
-  modalTitle: { fontSize: 24, fontWeight: '900', color: Colors.ink },
-  closeBtn: { backgroundColor: '#F3F4F6', padding: 8, borderRadius: 16 },
+  modalTitle: { fontSize: 24, fontWeight: '900' },
+  closeBtn: { padding: 8, borderRadius: 16 },
   formGroup: { marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '800', color: Colors.textSecondary, marginBottom: 10, textTransform: 'uppercase' },
-  input: { backgroundColor: '#F9FAFB', borderRadius: 20, padding: 18, fontSize: 16, borderWidth: 1, borderColor: '#F3F4F6', color: Colors.ink, fontWeight: '600' },
+  label: { fontSize: 14, fontWeight: '800', marginBottom: 10, textTransform: 'uppercase' },
+  input: { borderRadius: 20, padding: 18, fontSize: 16, borderWidth: 1, fontWeight: '600' },
   rateInputRow: { justifyContent: 'center' },
   inputIcon: { position: 'absolute', left: 18, zIndex: 1 },
-  isMainRow: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#F9FAFB', borderRadius: 24, marginBottom: 30 },
-  isMainLabel: { fontSize: 16, fontWeight: '800', color: Colors.ink },
-  isMainDesc: { fontSize: 12, color: Colors.textSecondary, marginTop: 4, paddingRight: 20 },
-  submitBtn: { backgroundColor: Colors.ink, paddingVertical: 20, borderRadius: 24, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  submitBtnText: { color: '#FFF', fontSize: 18, fontWeight: '900', marginLeft: 10 },
+  isMainRow: { flexDirection: 'row', alignItems: 'center', padding: 20, borderRadius: 24, marginBottom: 30 },
+  isMainLabel: { fontSize: 16, fontWeight: '800' },
+  isMainDesc: { fontSize: 12, marginTop: 4, paddingRight: 20 },
+  submitBtn: { paddingVertical: 20, borderRadius: 24, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  submitBtnText: { fontSize: 18, fontWeight: '900', marginLeft: 10 },
 });

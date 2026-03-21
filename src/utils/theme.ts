@@ -1,4 +1,4 @@
-export const Colors = {
+const LightColors = {
   background: '#F8F9FA',
   paper: '#FFFFFF',
   text: '#1A1A1A',
@@ -11,6 +11,23 @@ export const Colors = {
   border: '#E0E0E0',
   ink: '#1D1D1F',
 };
+
+const DarkColors = {
+  background: '#0F172A',
+  paper: '#1E293B',
+  text: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  primary: '#F8FAFC',
+  accent: '#38BDF8',
+  success: '#10B981',
+  danger: '#EF4444',
+  warning: '#FBBF24',
+  border: '#334155',
+  ink: '#F1F5F9',
+};
+
+export const Colors = LightColors; // Backward compatibility
+export { LightColors, DarkColors };
 
 export const Shadows = {
   paper: {
@@ -41,26 +58,26 @@ export const Typography = {
   h1: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: LightColors.text,
     letterSpacing: -0.5,
   },
   h2: {
     fontSize: 22,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: LightColors.text,
   },
   body: {
     fontSize: 16,
-    color: Colors.text,
+    color: LightColors.text,
     lineHeight: 22,
   },
   caption: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: LightColors.textSecondary,
   },
   number: {
     fontSize: 20,
     fontWeight: '600' as const,
-    fontFamily: 'System', // Use mono if available
+    fontFamily: 'System', 
   }
 };

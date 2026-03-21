@@ -7,17 +7,19 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getDatabase } from '../database/db';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { Alert } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
-const ScreenHeader = ({ title, subtitle }: { title: string, subtitle: string }) => (
+const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: string, colors: any }) => (
   <View style={styles.headerContainer}>
-    <Text style={styles.headerSubtitle}>{subtitle}</Text>
-    <Text style={styles.headerTitle}>{title}</Text>
+    <Text style={[styles.headerSubtitle, { color: colors.accent }]}>{subtitle}</Text>
+    <Text style={[styles.headerTitle, { color: colors.ink }]}>{title}</Text>
   </View>
 );
 
 export default function TransactionsScreen() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const { colors, isDark } = useTheme();
 
   const handleDelete = (id: number) => {
     Alert.alert(
@@ -70,29 +72,29 @@ export default function TransactionsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={Colors.accent} />
+      <View style={[styles.container, styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={transactions}
         ListHeaderComponent={
           <>
-            <ScreenHeader title="Flux Financier" subtitle="Toutes vos opérations" />
+            <ScreenHeader title="Flux Financier" subtitle="Toutes vos opérations" colors={colors} />
             <View style={styles.searchContainer}>
-              <Card style={styles.searchBar}>
-                <Search stroke={Colors.textSecondary} size={20} />
+              <Card style={[styles.searchBar, { backgroundColor: colors.paper, borderColor: colors.border }]}>
+                <Search stroke={colors.textSecondary} size={20} />
                 <TextInput 
                   placeholder="Rechercher une opération..." 
-                  style={styles.searchInput}
-                  placeholderTextColor={Colors.textSecondary}
+                  style={[styles.searchInput, { color: colors.text }]}
+                  placeholderTextColor={colors.textSecondary}
                 />
                 <TouchableOpacity style={styles.filterBtn}>
-                  <Filter stroke={Colors.accent} size={20} />
+                  <Filter stroke={colors.accent} size={20} />
                 </TouchableOpacity>
               </Card>
             </View>
@@ -106,34 +108,34 @@ export default function TransactionsScreen() {
               <View style={styles.row}>
                 <View style={[
                   styles.typeIcon, 
-                  { backgroundColor: item.type === 'income' ? '#E6F4EA' : '#FCE8E8' }
+                  { backgroundColor: item.type === 'income' ? (colors.success + '15') : (colors.danger + '15') }
                 ]}>
                   {item.nature === 'virtual' ? (
-                    <Calendar stroke={item.type === 'income' ? Colors.success : Colors.danger} size={20} />
+                    <Calendar stroke={item.type === 'income' ? colors.success : colors.danger} size={20} />
                   ) : (
                     item.type === 'income' ? 
-                      <ArrowUpRight stroke={Colors.success} size={22} /> : 
-                      <ArrowDownLeft stroke={Colors.danger} size={22} />
+                      <ArrowUpRight stroke={colors.success} size={22} /> : 
+                      <ArrowDownLeft stroke={colors.danger} size={22} />
                   )}
                 </View>
                 
                 <View style={styles.contentContainer}>
-                  <Text style={styles.itemTitle} numberOfLines={1} ellipsizeMode="tail">
+                  <Text style={[styles.itemTitle, { color: colors.ink }]} numberOfLines={1}>
                     {item.description}
                   </Text>
                   <View style={styles.metaRow}>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.itemCategory} numberOfLines={1}>
+                    <View style={[styles.categoryBadge, { backgroundColor: colors.background }]}>
+                      <Text style={[styles.itemCategory, { color: colors.textSecondary }]} numberOfLines={1}>
                         {item.source_name || item.obligation_name || 'Système'}
                       </Text>
                     </View>
-                    <Text style={styles.itemDate}>
+                    <Text style={[styles.itemDate, { color: colors.textSecondary }]}>
                       {new Date(item.transaction_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                     </Text>
                   </View>
                   {item.project_name && (
-                    <View style={styles.projectBadge}>
-                      <Text style={styles.projectBadgeText} numberOfLines={1}>🎯 {item.project_name}</Text>
+                    <View style={[styles.projectBadge, { backgroundColor: colors.accent + '15' }]}>
+                      <Text style={[styles.projectBadgeText, { color: colors.accent }]} numberOfLines={1}>🎯 {item.project_name}</Text>
                     </View>
                   )}
                 </View>
@@ -141,14 +143,14 @@ export default function TransactionsScreen() {
                 <View style={styles.amountContainer}>
                   <Text style={[
                     styles.itemAmount, 
-                    { color: item.type === 'income' ? Colors.success : Colors.ink }
+                    { color: item.type === 'income' ? colors.success : colors.ink }
                   ]}>
                     {item.type === 'income' ? '+' : '-'}{item.amount_original.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Text>
-                  <Text style={styles.currencyCode}>{item.currency_code}</Text>
+                  <Text style={[styles.currencyCode, { color: colors.textSecondary }]}>{item.currency_code}</Text>
                   {item.obligation_id && (
-                    <View style={styles.obligationIndicator}>
-                      <Text style={styles.miniLabel}>Obligation</Text>
+                    <View style={[styles.obligationIndicator, { backgroundColor: colors.accent + '15' }]}>
+                      <Text style={[styles.miniLabel, { color: colors.accent }]}>Obligation</Text>
                     </View>
                   )}
                 </View>
@@ -158,7 +160,7 @@ export default function TransactionsScreen() {
         )}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
-            <Text style={{ color: Colors.textSecondary }}>Aucune transaction trouvée</Text>
+            <Text style={{ color: colors.textSecondary }}>Aucune transaction trouvée</Text>
           </View>
         }
       />
@@ -167,30 +169,30 @@ export default function TransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   headerContainer: { marginBottom: 20, marginTop: 10 },
-  headerSubtitle: { color: Colors.accent, fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: Colors.ink, marginTop: 4 },
+  headerSubtitle: { fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitle: { fontSize: 32, fontWeight: '800', marginTop: 4 },
   listContent: { padding: Spacing.lg, paddingBottom: 140 },
   searchContainer: { marginBottom: 24 },
   searchBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 20 },
-  searchInput: { flex: 1, marginLeft: 12, fontSize: 16, color: Colors.text, fontWeight: '500' },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 16, fontWeight: '500' },
   filterBtn: { padding: 4 },
   transactionCard: { padding: 12, paddingHorizontal: 16, borderRadius: 24, marginBottom: 12 },
   row: { flexDirection: 'row', alignItems: 'center' },
   typeIcon: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   contentContainer: { flex: 1, marginLeft: 16, paddingRight: 8 },
-  itemTitle: { fontSize: 16, fontWeight: '700', color: Colors.ink, marginBottom: 4 },
+  itemTitle: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
   metaRow: { flexDirection: 'row', alignItems: 'center' },
-  categoryBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 8, maxWidth: '60%' },
-  itemCategory: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary },
-  itemDate: { fontSize: 11, color: Colors.textSecondary, fontWeight: '500' },
-  projectBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 4, backgroundColor: Colors.accent + '10', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
-  projectBadgeText: { fontSize: 9, fontWeight: '800', color: Colors.accent, textTransform: 'uppercase' },
+  categoryBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 8, maxWidth: '60%' },
+  itemCategory: { fontSize: 11, fontWeight: '700' },
+  itemDate: { fontSize: 11, fontWeight: '500' },
+  projectBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 4, alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
+  projectBadgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   amountContainer: { alignItems: 'flex-end', minWidth: 80 },
   itemAmount: { fontSize: 16, fontWeight: '900' },
-  currencyCode: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary, marginTop: -2 },
-  obligationIndicator: { backgroundColor: Colors.accent + '15', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  miniLabel: { fontSize: 8, fontWeight: '800', color: Colors.accent, textTransform: 'uppercase' },
+  currencyCode: { fontSize: 10, fontWeight: '700', marginTop: -2 },
+  obligationIndicator: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
+  miniLabel: { fontSize: 8, fontWeight: '800', textTransform: 'uppercase' },
 });

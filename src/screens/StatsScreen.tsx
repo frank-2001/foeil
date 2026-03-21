@@ -14,15 +14,17 @@ import {
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { FinancialEngine } from '../services/FinancialEngine';
+import { useTheme } from '../context/ThemeContext';
 
-const ScreenHeader = ({ title, subtitle }: { title: string, subtitle: string }) => (
+const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: string, colors: any }) => (
   <View style={styles.headerContainer}>
-    <Text style={styles.headerSubtitle}>{subtitle}</Text>
-    <Text style={styles.headerTitle}>{title}</Text>
+    <Text style={[styles.headerSubtitle, { color: colors.accent }]}>{subtitle}</Text>
+    <Text style={[styles.headerTitle, { color: colors.ink }]}>{title}</Text>
   </View>
 );
 
 export default function StatsScreen() {
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'insights' | 'sources' | 'projects'>('insights');
@@ -49,7 +51,11 @@ export default function StatsScreen() {
   };
 
   if (loading || !stats) {
-    return <View style={styles.center}><ActivityIndicator color={Colors.accent} size="large" /></View>;
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
+      </View>
+    );
   }
 
   const renderInsights = () => {
@@ -60,19 +66,19 @@ export default function StatsScreen() {
 
     return (
       <View>
-        <Text style={styles.sectionTitle}>Analyse Stratégique</Text>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Analyse Stratégique</Text>
         
         <Card style={styles.insightCard}>
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: Colors.success + '15' }]}>
-              <Target size={22} stroke={Colors.success} />
+            <View style={[styles.iconBox, { backgroundColor: colors.success + '15' }]}>
+              <Target size={22} stroke={colors.success} />
             </View>
             <View style={styles.flex1}>
-              <Text style={styles.insightValue}>{months.toFixed(1)} Mois</Text>
-              <Text style={styles.insightLabel}>Autonomie Financière (Buffer)</Text>
+              <Text style={[styles.insightValue, { color: colors.ink }]}>{months.toFixed(1)} Mois</Text>
+              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Autonomie Financière (Buffer)</Text>
             </View>
           </View>
-          <Text style={styles.interpretation}>
+          <Text style={[styles.interpretation, { color: colors.textSecondary }]}>
             {months > 6 ? "Position Solide: Vous pouvez maintenir votre niveau de vie actuel pendant plus de 6 mois sans revenus." 
               : (months > 2 ? "Position Stable: Votre réserve couvre vos besoins immédiats mais reste fragile."
               : "Alerte: Votre buffer est trop faible. Augmentez votre épargne de précaution.")
@@ -82,21 +88,21 @@ export default function StatsScreen() {
 
         <Card style={styles.insightCard}>
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: Colors.accent + '15' }]}>
-              <TrendingUp size={22} stroke={Colors.accent} />
+            <View style={[styles.iconBox, { backgroundColor: colors.accent + '15' }]}>
+              <TrendingUp size={22} stroke={colors.accent} />
             </View>
             <View style={styles.flex1}>
-              <Text style={styles.insightValue}>{net.toFixed(0)} $</Text>
-              <Text style={styles.insightLabel}>Patrimoine Net Estimé (Cash + Oblig.)</Text>
+              <Text style={[styles.insightValue, { color: colors.ink }]}>{net.toFixed(0)} $</Text>
+              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Patrimoine Net Estimé (Cash + Oblig.)</Text>
             </View>
           </View>
-          <Text style={styles.interpretation}>
+          <Text style={[styles.interpretation, { color: colors.textSecondary }]}>
             Ratio Dettes/Créances: {((debt/(rec||1))*100).toFixed(0)}%. 
             {debt > rec ? " Votre niveau d'endettement est supérieur à vos créances. Priorisez le remboursement." : " Vos actifs (créances) couvrent vos dettes. C'est un indicateur de bonne santé."}
           </Text>
         </Card>
 
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Réalité vs Objectif (Dépenses)</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 20, color: colors.ink }]}>Réalité vs Objectif (Dépenses)</Text>
         <Card style={styles.statCard}>
           {['essential', 'personal', 'investment'].map((cat) => {
             const actual = stats.distribution?.find((d: any) => d.category === cat)?.total || 0;
@@ -108,14 +114,14 @@ export default function StatsScreen() {
             return (
               <View key={cat} style={{ marginBottom: 15 }}>
                 <View style={styles.rowBetween}>
-                  <Text style={styles.catName}>{cat.toUpperCase()}</Text>
-                  <Text style={styles.pctText}>{pctActual.toFixed(1)}% <Text style={{fontSize: 10, color: Colors.textSecondary}}>(Cible: {target}%)</Text></Text>
+                  <Text style={[styles.catName, { color: colors.ink }]}>{cat.toUpperCase()}</Text>
+                  <Text style={[styles.pctText, { color: colors.accent }]}>{pctActual.toFixed(1)}% <Text style={{fontSize: 10, color: colors.textSecondary}}>(Cible: {target}%)</Text></Text>
                 </View>
-                <View style={styles.progressBg}>
-                  <View style={[styles.progressFill, { width: `${pctActual}%`, backgroundColor: Math.abs(drift) > 10 ? Colors.danger : Colors.accent }]} />
+                <View style={[styles.progressBg, { backgroundColor: colors.background }]}>
+                  <View style={[styles.progressFill, { width: `${pctActual}%`, backgroundColor: Math.abs(drift) > 10 ? colors.danger : colors.accent }]} />
                 </View>
                 {Math.abs(drift) > 5 && (
-                  <Text style={[styles.driftText, { color: drift > 0 ? Colors.danger : Colors.success }]}>
+                  <Text style={[styles.driftText, { color: drift > 0 ? colors.danger : colors.success }]}>
                     {drift > 0 ? `Surconsommation de ${drift.toFixed(1)}%` : `Sous-budget de ${Math.abs(drift).toFixed(1)}%`}
                   </Text>
                 )}
@@ -129,38 +135,38 @@ export default function StatsScreen() {
 
   const renderSources = () => (
     <View>
-      <Text style={styles.sectionTitle}>Sources de Revenus (Top 5)</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Sources de Revenus (Top 5)</Text>
       {stats.topIncome.map((item: any, i: number) => (
         <Card key={i} style={styles.statCard}>
           <View style={styles.rowBetween}>
             <View style={styles.row}>
-              <View style={[styles.iconBox, { backgroundColor: '#def7ec' }]}>
-                <ArrowUpRight stroke="#0e9f6e" size={20} />
+              <View style={[styles.iconBox, { backgroundColor: colors.success + '15' }]}>
+                <ArrowUpRight stroke={colors.success} size={20} />
               </View>
-              <Text style={styles.sourceName}>{item.name}</Text>
+              <Text style={[styles.sourceName, { color: colors.ink }]}>{item.name}</Text>
             </View>
-            <Text style={[styles.amount, { color: '#0e9f6e' }]}>+{item.total?.toFixed(0)} $</Text>
+            <Text style={[styles.amount, { color: colors.success }]}>+{item.total?.toFixed(0)} $</Text>
           </View>
-          <View style={styles.progressBg}>
-            <View style={[styles.progressFill, { width: `${Math.min(100, (item.total / (stats.topIncome[0]?.total || 1)) * 100)}%`, backgroundColor: '#0e9f6e' }]} />
+          <View style={[styles.progressBg, { backgroundColor: colors.background }]}>
+            <View style={[styles.progressFill, { width: `${Math.min(100, (item.total / (stats.topIncome[0]?.total || 1)) * 100)}%`, backgroundColor: colors.success }]} />
           </View>
         </Card>
       ))}
 
-      <Text style={[styles.sectionTitle, { marginTop: 30 }]}>Sources de Dépenses (Top 5)</Text>
+      <Text style={[styles.sectionTitle, { marginTop: 30, color: colors.ink }]}>Sources de Dépenses (Top 5)</Text>
       {stats.topExpense.map((item: any, i: number) => (
         <Card key={i} style={styles.statCard}>
           <View style={styles.rowBetween}>
             <View style={styles.row}>
-              <View style={[styles.iconBox, { backgroundColor: '#fde8e8' }]}>
-                <ArrowDownRight stroke="#c81e1e" size={20} />
+              <View style={[styles.iconBox, { backgroundColor: colors.danger + '15' }]}>
+                <ArrowDownRight stroke={colors.danger} size={20} />
               </View>
-              <Text style={styles.sourceName}>{item.name}</Text>
+              <Text style={[styles.sourceName, { color: colors.ink }]}>{item.name}</Text>
             </View>
-            <Text style={[styles.amount, { color: '#c81e1e' }]}>-{item.total?.toFixed(0)} $</Text>
+            <Text style={[styles.amount, { color: colors.danger }]}>-{item.total?.toFixed(0)} $</Text>
           </View>
-          <View style={styles.progressBg}>
-            <View style={[styles.progressFill, { width: `${Math.min(100, (item.total / (stats.topExpense[0]?.total || 1)) * 100)}%`, backgroundColor: '#c81e1e' }]} />
+          <View style={[styles.progressBg, { backgroundColor: colors.background }]}>
+            <View style={[styles.progressFill, { width: `${Math.min(100, (item.total / (stats.topExpense[0]?.total || 1)) * 100)}%`, backgroundColor: colors.danger }]} />
           </View>
         </Card>
       ))}
@@ -169,7 +175,7 @@ export default function StatsScreen() {
 
   const renderProjects = () => (
     <View>
-      <Text style={styles.sectionTitle}>Analyse par Projet</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Analyse par Projet</Text>
       {stats.projectPerformance.map((p: any, i: number) => {
         const consumed = p.current_spend || 0;
         const budget = p.estimated_cost || 1;
@@ -177,20 +183,20 @@ export default function StatsScreen() {
         return (
           <Card key={i} style={styles.projectCard}>
             <View style={styles.rowBetween}>
-              <Text style={styles.projectName}>{p.name}</Text>
-              <Text style={styles.projectBudget}>{consumed.toFixed(0)} / {budget.toFixed(0)} $</Text>
+              <Text style={[styles.projectName, { color: colors.ink }]}>{p.name}</Text>
+              <Text style={[styles.projectBudget, { color: colors.textSecondary }]}>{consumed.toFixed(0)} / {budget.toFixed(0)} $</Text>
             </View>
-            <View style={styles.progressBgLarge}>
-              <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: progress > 90 ? Colors.danger : (progress > 70 ? Colors.warning : Colors.accent) }]} />
+            <View style={[styles.progressBgLarge, { backgroundColor: colors.background }]}>
+              <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: progress > 90 ? colors.danger : (progress > 70 ? colors.warning : colors.accent) }]} />
             </View>
             <View style={styles.rowBetween}>
-              <Text style={styles.miniLabel}>Consommé</Text>
-              <Text style={styles.miniLabel}>{progress.toFixed(1)}%</Text>
+              <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>Consommé</Text>
+              <Text style={[styles.miniLabel, { color: colors.textSecondary }]}>{progress.toFixed(1)}%</Text>
             </View>
             {p.current_income > 0 && (
-              <View style={[styles.roiBox, {marginTop: 10}]}>
-                <TrendingUp size={14} stroke={Colors.accent} />
-                <Text style={styles.roiText}>Revenus générés: {p.current_income?.toFixed(0)} $</Text>
+              <View style={[styles.roiBox, {marginTop: 10, backgroundColor: colors.accent + '10'}]}>
+                <TrendingUp size={14} stroke={colors.accent} />
+                <Text style={[styles.roiText, { color: colors.accent }]}>Revenus générés: {p.current_income?.toFixed(0)} $</Text>
               </View>
             )}
           </Card>
@@ -200,9 +206,9 @@ export default function StatsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Analytics" subtitle="Performances Financières" />
+        <ScreenHeader title="Analytics" subtitle="Performances Financières" colors={colors} />
 
         <View style={styles.periodRow}>
           {[
@@ -214,9 +220,9 @@ export default function StatsScreen() {
             <TouchableOpacity 
               key={item.id} 
               onPress={() => changePeriod(item.id as any)}
-              style={[styles.periodChip, period === item.id && styles.activePeriodChip]}
+              style={[styles.periodChip, { backgroundColor: colors.paper, borderColor: colors.border }, period === item.id && { backgroundColor: colors.accent, borderColor: colors.accent }]}
             >
-              <Text style={[styles.periodText, period === item.id && styles.activePeriodText]}>{item.label}</Text>
+              <Text style={[styles.periodText, { color: colors.textSecondary }, period === item.id && { color: '#FFF' }]}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -224,24 +230,24 @@ export default function StatsScreen() {
         <View style={styles.tabRow}>
           <TouchableOpacity 
             onPress={() => setActiveTab('insights')}
-            style={[styles.tab, activeTab === 'insights' && styles.activeTab]}
+            style={[styles.tab, { backgroundColor: colors.paper, borderColor: colors.border }, activeTab === 'insights' && { backgroundColor: colors.ink, borderColor: colors.ink }]}
           >
-            <ShieldAlert size={18} stroke={activeTab === 'insights' ? '#FFF' : Colors.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'insights' && styles.activeTabText]}>Aperçu</Text>
+            <ShieldAlert size={18} stroke={activeTab === 'insights' ? '#FFF' : colors.textSecondary} />
+            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'insights' && { color: '#FFF' }]}>Aperçu</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => setActiveTab('sources')}
-            style={[styles.tab, activeTab === 'sources' && styles.activeTab]}
+            style={[styles.tab, { backgroundColor: colors.paper, borderColor: colors.border }, activeTab === 'sources' && { backgroundColor: colors.ink, borderColor: colors.ink }]}
           >
-            <ChartIcon size={18} stroke={activeTab === 'sources' ? '#FFF' : Colors.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'sources' && styles.activeTabText]}>Sources</Text>
+            <ChartIcon size={18} stroke={activeTab === 'sources' ? '#FFF' : colors.textSecondary} />
+            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'sources' && { color: '#FFF' }]}>Sources</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => setActiveTab('projects')}
-            style={[styles.tab, activeTab === 'projects' && styles.activeTab]}
+            style={[styles.tab, { backgroundColor: colors.paper, borderColor: colors.border }, activeTab === 'projects' && { backgroundColor: colors.ink, borderColor: colors.ink }]}
           >
-            <Briefcase size={18} stroke={activeTab === 'projects' ? '#FFF' : Colors.textSecondary} />
-            <Text style={[styles.tabText, activeTab === 'projects' && styles.activeTabText]}>Projets</Text>
+            <Briefcase size={18} stroke={activeTab === 'projects' ? '#FFF' : colors.textSecondary} />
+            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === 'projects' && { color: '#FFF' }]}>Projets</Text>
           </TouchableOpacity>
         </View>
 
@@ -253,26 +259,22 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: Spacing.lg, paddingBottom: 60 },
   headerContainer: { marginBottom: 30 },
-  headerSubtitle: { color: Colors.accent, fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: Colors.ink },
+  headerSubtitle: { fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitle: { fontSize: 32, fontWeight: '800' },
   
   periodRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  periodChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB' },
-  activePeriodChip: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  periodText: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
-  activePeriodText: { color: '#FFF' },
+  periodChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
+  periodText: { fontSize: 13, fontWeight: '700' },
 
   tabRow: { flexDirection: 'row', gap: 12, marginBottom: 25 },
-  tab: { flex: 1, height: 45, backgroundColor: '#FFF', borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-  activeTab: { backgroundColor: Colors.ink, borderColor: Colors.ink },
-  tabText: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
-  activeTabText: { color: '#FFF' },
+  tab: { flex: 1, height: 45, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1 },
+  tabText: { fontSize: 13, fontWeight: '700' },
 
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: Colors.ink, marginBottom: 15 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: 15 },
   statCard: { padding: 15, borderRadius: 18, marginBottom: 10 },
   projectCard: { padding: 18, borderRadius: 22, marginBottom: 15 },
   insightCard: { padding: 18, borderRadius: 22, marginBottom: 12 },
@@ -280,24 +282,24 @@ const styles = StyleSheet.create({
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   flex1: { flex: 1 },
-  sourceName: { fontSize: 15, fontWeight: '700', color: Colors.ink },
+  sourceName: { fontSize: 15, fontWeight: '700' },
   amount: { fontSize: 16, fontWeight: '800' },
   
-  insightValue: { fontSize: 22, fontWeight: '900', color: Colors.ink },
-  insightLabel: { fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
-  interpretation: { fontSize: 12, color: Colors.textSecondary, marginTop: 12, lineHeight: 18, fontStyle: 'italic' },
+  insightValue: { fontSize: 22, fontWeight: '900' },
+  insightLabel: { fontSize: 12, fontWeight: '600' },
+  interpretation: { fontSize: 12, marginTop: 12, lineHeight: 18, fontStyle: 'italic' },
   
-  catName: { fontSize: 13, fontWeight: '800', color: Colors.ink },
-  pctText: { fontSize: 14, fontWeight: '900', color: Colors.accent },
+  catName: { fontSize: 13, fontWeight: '800' },
+  pctText: { fontSize: 14, fontWeight: '900' },
   driftText: { fontSize: 11, fontWeight: '700', marginTop: 6 },
   
-  progressBg: { height: 4, backgroundColor: '#f3f4f6', borderRadius: 2, marginTop: 12 },
-  progressBgLarge: { height: 8, backgroundColor: '#f3f4f6', borderRadius: 4, marginVertical: 10 },
+  progressBg: { height: 4, borderRadius: 2, marginTop: 12 },
+  progressBgLarge: { height: 8, borderRadius: 4, marginVertical: 10 },
   progressFill: { height: '100%', borderRadius: 4 },
 
-  projectName: { fontSize: 16, fontWeight: '800', color: Colors.ink },
-  projectBudget: { fontSize: 13, color: Colors.textSecondary, fontWeight: '700' },
-  miniLabel: { fontSize: 10, color: Colors.textSecondary, fontWeight: '800', textTransform: 'uppercase' },
-  roiBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.accent + '10', padding: 8, borderRadius: 8 },
-  roiText: { fontSize: 11, fontWeight: '700', color: Colors.accent }
+  projectName: { fontSize: 16, fontWeight: '800' },
+  projectBudget: { fontSize: 13, fontWeight: '700' },
+  miniLabel: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  roiBox: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 8 },
+  roiText: { fontSize: 11, fontWeight: '700' }
 });

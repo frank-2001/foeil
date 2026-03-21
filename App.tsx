@@ -35,19 +35,21 @@ import SourceDetailsScreen from './src/screens/SourceDetailsScreen';
 import { 
   SavingsSettingsScreen 
 } from './src/screens/MenuScreens';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function TabNavigator() {
+function TabNavigator({ appStyles }: { appStyles: any }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const { colors, isDark } = useTheme();
 
   return (
     <>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: Colors.accent,
-          tabBarInactiveTintColor: 'rgba(0,0,0,0.4)',
+          tabBarActiveTintColor: colors.accent,
+          tabBarInactiveTintColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
           tabBarShowLabel: true,
           tabBarLabelStyle: {
             fontSize: 11,
@@ -56,27 +58,27 @@ function TabNavigator() {
           },
           tabBarStyle: {
             position: 'absolute',
-            bottom: 0,
+            bottom: 20,
             left: 20,
             right: 20,
-            height: 75,
+            height: 70,
             borderRadius: 25,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.paper,
             borderTopWidth: 0,
-            paddingBottom: 40,
+            paddingBottom: 0,
             // High-end drop shadow
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.1,
+            shadowOpacity: isDark ? 0.3 : 0.1,
             shadowRadius: 16,
             elevation: 20,
           },
           headerStyle: {
-            backgroundColor: '#F9FAFB',
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             fontWeight: '900',
-            color: Colors.ink,
+            color: colors.ink,
             fontSize: 22,
           },
           headerShadowVisible: false,
@@ -90,9 +92,9 @@ function TabNavigator() {
             title: 'FOEIL',
             tabBarLabel: 'Tableau',
             tabBarIcon: ({ color, focused }) => (
-              <View style={focused && styles.tabIconActive}>
+              <View style={focused && appStyles.tabIconActive}>
                 <Home stroke={color} size={focused ? 28 : 24} strokeWidth={focused ? 2.5 : 2} />
-                {focused && <View style={styles.activeDot} />}
+                {focused && <View style={appStyles.activeDot} />}
               </View>
             ),
           }}
@@ -109,8 +111,8 @@ function TabNavigator() {
           options={{
             tabBarLabel: 'Inscrire',
             tabBarIcon: ({ color, focused }) => (
-              <View style={styles.mainActionBtn}>
-                <Plus stroke="#FFF" size={32} strokeWidth={3} />
+              <View style={appStyles.mainActionBtn}>
+                <Plus stroke={colors.paper} size={32} strokeWidth={3} />
               </View>
             ),
           }}
@@ -122,9 +124,9 @@ function TabNavigator() {
             title: 'Flux Financier',
             tabBarLabel: 'Flux',
             tabBarIcon: ({ color, focused }) => (
-              <View style={focused && styles.tabIconActive}>
+              <View style={focused && appStyles.tabIconActive}>
                 <ReceiptText stroke={color} size={focused ? 28 : 24} strokeWidth={focused ? 2.5 : 2} />
-                {focused && <View style={styles.activeDot} />}
+                {focused && <View style={appStyles.activeDot} />}
               </View>
             ),
           }}
@@ -139,69 +141,61 @@ function TabNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  tabIconActive: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.accent,
-    marginTop: 6,
-    position: 'absolute',
-    bottom: -12,
-  },
-  mainActionBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: Colors.ink,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40, // High float
-    shadowColor: Colors.ink,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-});
+function MainApp() {
+  const { colors, isDark } = useTheme();
 
-export default function App() {
-  useEffect(() => {
-    const init = async () => {
-      await initDatabase();
-      const granted = await NotificationService.requestPermissions();
-      if (granted) {
-        await NotificationService.scheduleDailyReminders();
-      }
-    };
-    init().catch(console.error);
-  }, []);
+  const appStyles = StyleSheet.create({
+    tabIconActive: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    activeDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.accent,
+      marginTop: 6,
+      position: 'absolute',
+      bottom: -12,
+    },
+    mainActionBtn: {
+      width: 60,
+      height: 60,
+      borderRadius: 20,
+      backgroundColor: colors.ink,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 40, // High float
+      shadowColor: colors.ink,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+  });
 
   return (
     <NavigationContainer>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#F9FAFB',
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             fontWeight: '800',
-            color: Colors.ink,
+            color: colors.ink,
           },
           headerShadowVisible: false,
-          headerTintColor: Colors.accent,
+          headerTintColor: colors.accent,
         }}
       >
         <Stack.Screen 
           name="MainTabs" 
-          component={TabNavigator} 
           options={{ headerShown: false }} 
-        />
+        >
+          {props => <TabNavigator {...props} appStyles={appStyles} />}
+        </Stack.Screen>
         <Stack.Screen name="Projects" component={ProjectsScreen} options={{ title: 'Mes Projets' }} />
         <Stack.Screen name="Sources" component={SourcesScreen} options={{ title: 'Mes Sources' }} />
         <Stack.Screen name="Currencies" component={CurrenciesScreen} options={{ title: 'Mes Devises' }} />
@@ -219,5 +213,24 @@ export default function App() {
         <Stack.Screen name="SourceDetails" component={SourceDetailsScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  useEffect(() => {
+    const init = async () => {
+      await initDatabase();
+      const granted = await NotificationService.requestPermissions();
+      if (granted) {
+        await NotificationService.scheduleDailyReminders();
+      }
+    };
+    init().catch(console.error);
+  }, []);
+
+  return (
+    <ThemeProvider>
+      <MainApp />
+    </ThemeProvider>
   );
 }

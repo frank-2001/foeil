@@ -27,21 +27,22 @@ import {
 import { Colors, Spacing, Typography } from '../../utils/theme';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 export const HeaderMenu = () => {
+  const { colors, isDark } = useTheme();
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   const menuItems = [
-    { label: 'Mes Projets', desc: 'Suivi de vos investissements', icon: Landmark, screen: 'Projects', color: Colors.accent },
+    { label: 'Mes Projets', desc: 'Suivi de vos investissements', icon: Landmark, screen: 'Projects', color: colors.accent },
     { label: 'Mes Sources', desc: 'Gérez vos flux entrants et sortants', icon: Database, screen: 'Sources', color: '#4F46E5' },
     { label: 'Mes Devises', desc: 'Configuration multi-monnaies', icon: Coins, screen: 'Currencies', color: '#F59E0B' },
     { label: 'Mes Obligations', desc: 'Suivi des dettes et créances', icon: FileText, screen: 'Obligations', color: '#10B981' },
-    // { label: "Système d'épargne", desc: 'Règles de discipline financière', icon: Sliders, screen: 'SavingsSettings', color: '#EC4899' },
     { label: 'Synchronisation', desc: 'Cloud et sauvegarde distante', icon: RefreshCw, screen: 'Sync', color: '#3B82F6' },
   ];
 
@@ -87,7 +88,7 @@ export const HeaderMenu = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={openMenu} style={styles.triggerButton}>
-        <Menu stroke={Colors.ink} size={28} strokeWidth={2.5} />
+        <Menu stroke={colors.ink} size={28} strokeWidth={2.5} />
       </TouchableOpacity>
 
       <Modal
@@ -96,24 +97,22 @@ export const HeaderMenu = () => {
         onRequestClose={closeMenu}
       >
         <View style={styles.modalContent}>
-          {/* Background Blur/Overlay - Lighter for consistency */}
           <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
             {Platform.OS === 'ios' ? (
-              <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+              <BlurView intensity={30} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
             ) : (
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.7)' }]} />
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.7)' }]} />
             )}
           </Animated.View>
 
-          {/* Menu Content - Now Light Theme */}
-          <Animated.View style={[styles.mainMenu, { transform: [{ translateY: slideAnim }] }]}>
+          <Animated.View style={[styles.mainMenu, { backgroundColor: colors.paper, transform: [{ translateY: slideAnim }] }]}>
             <View style={styles.header}>
               <View>
-                <Text style={styles.greeting}>Configuration</Text>
-                <Text style={styles.brandTitle}>Menu FOEIL</Text>
+                <Text style={[styles.greeting, { color: colors.textSecondary }]}>Configuration</Text>
+                <Text style={[styles.brandTitle, { color: colors.ink }]}>Menu FOEIL</Text>
               </View>
-              <TouchableOpacity onPress={closeMenu} style={styles.closeButton}>
-                <X stroke={Colors.ink} size={32} />
+              <TouchableOpacity onPress={closeMenu} style={[styles.closeButton, { backgroundColor: colors.background }]}>
+                <X stroke={colors.ink} size={32} />
               </TouchableOpacity>
             </View>
 
@@ -121,7 +120,7 @@ export const HeaderMenu = () => {
               {menuItems.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.menuItem}
+                  style={[styles.menuItem, { backgroundColor: colors.background, borderColor: colors.border }]}
                   onPress={() => handleNavigate(item.screen)}
                   activeOpacity={0.7}
                 >
@@ -129,30 +128,30 @@ export const HeaderMenu = () => {
                     <item.icon stroke={item.color} size={28} strokeWidth={2} />
                   </View>
                   <View style={styles.itemMeta}>
-                    <Text style={styles.itemLabel}>{item.label}</Text>
-                    <Text style={styles.itemDesc}>{item.desc}</Text>
+                    <Text style={[styles.itemLabel, { color: colors.ink }]}>{item.label}</Text>
+                    <Text style={[styles.itemDesc, { color: colors.textSecondary }]}>{item.desc}</Text>
                   </View>
-                  <ChevronRight stroke="rgba(0,0,0,0.1)" size={20} />
+                  <ChevronRight stroke={colors.textSecondary + '40'} size={20} />
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
             <View style={styles.footer}>
-              <View style={styles.footerRow}>
-                <TouchableOpacity style={styles.miniBtn} onPress={() => handleNavigate('Profile')}>
-                  <User stroke={Colors.textSecondary} size={20} />
-                  <Text style={styles.miniBtnText}>Profil</Text>
+              <View style={[styles.footerRow, { borderTopColor: colors.border }]}>
+                <TouchableOpacity style={[styles.miniBtn, { backgroundColor: colors.background }]} onPress={() => handleNavigate('Profile')}>
+                  <User stroke={colors.textSecondary} size={20} />
+                  <Text style={[styles.miniBtnText, { color: colors.textSecondary }]}>Profil</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.miniBtn} onPress={() => handleNavigate('Settings')}>
-                  <Settings stroke={Colors.textSecondary} size={20} />
-                  <Text style={styles.miniBtnText}>Paramètres</Text>
+                <TouchableOpacity style={[styles.miniBtn, { backgroundColor: colors.background }]} onPress={() => handleNavigate('Settings')}>
+                  <Settings stroke={colors.textSecondary} size={20} />
+                  <Text style={[styles.miniBtnText, { color: colors.textSecondary }]}>Paramètres</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.miniBtn} onPress={() => { setVisible(false); navigation.navigate('Support'); }}>
-                  <HelpCircle stroke={Colors.textSecondary} size={20} />
-                  <Text style={styles.miniBtnText}>Support</Text>
+                <TouchableOpacity style={[styles.miniBtn, { backgroundColor: colors.background }]} onPress={() => { setVisible(false); navigation.navigate('Support'); }}>
+                  <HelpCircle stroke={colors.textSecondary} size={20} />
+                  <Text style={[styles.miniBtnText, { color: colors.textSecondary }]}>Support</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.version}>FOEIL FinTech — v1.0.0</Text>
+              <Text style={[styles.version, { color: colors.textSecondary + '40' }]}>FOEIL FinTech — v1.0.0</Text>
             </View>
           </Animated.View>
         </View>
@@ -176,7 +175,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   mainMenu: {
-    backgroundColor: '#FFFFFF', 
     height: height * 0.85,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
@@ -195,18 +193,15 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   greeting: {
-    color: Colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
   },
   brandTitle: {
-    color: Colors.ink,
     fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
   closeButton: {
-    backgroundColor: '#F3F4F6',
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -219,12 +214,10 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     padding: 16,
     borderRadius: 24,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
   },
   iconContainer: {
     width: 56,
@@ -238,13 +231,11 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   itemLabel: {
-    color: Colors.ink,
     fontSize: 18,
     fontWeight: '800',
     marginBottom: 2,
   },
   itemDesc: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
   footer: {
@@ -256,25 +247,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
     paddingTop: 24,
   },
   miniBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 16,
   },
   miniBtnText: {
-    color: Colors.textSecondary,
     marginLeft: 8,
     fontSize: 12,
     fontWeight: '700',
   },
   version: {
-    color: 'rgba(0,0,0,0.15)',
     fontSize: 11,
     textAlign: 'center',
     fontWeight: '600',
