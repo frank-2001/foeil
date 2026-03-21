@@ -59,7 +59,10 @@ export class VersionService {
         if (needsUpdate && !data.force_full_update) {
           // OTA update required. Trigger fetch dynamically without blocking.
           // OtaIndicator component will catch the state and show progress over the app.
-          Updates.fetchUpdateAsync().catch((err) => console.log('Silently failed to fetch OTA:', err));
+          Updates.fetchUpdateAsync().catch((err) => {
+            console.log('Silently failed to fetch OTA:', err) 
+            Alert.alert('Silently failed to fetch OTA:', err.message)
+          });
           return null;
         }
       }
