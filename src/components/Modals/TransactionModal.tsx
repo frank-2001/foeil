@@ -41,8 +41,8 @@ interface TransactionModalProps {
   type?: 'income' | 'expense';
 }
 
-export const TransactionModal = ({ visible, onClose, type: initialType = 'expense' }: TransactionModalProps) => {
-  const { colors, isDark } = useTheme();
+export const TransactionModal = ({ visible, onClose, type: initialType = 'income' }: TransactionModalProps) => {
+  const { colors, isDark, triggerRefresh } = useTheme();
   const navigation = useNavigation<any>();
   const [type, setType] = useState<'income' | 'expense'>(initialType);
   const [nature, setNature] = useState<'cash' | 'virtual'>('cash');
@@ -87,6 +87,15 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'expens
   useEffect(() => {
     if (visible) {
       loadData();
+      // Full reset of form fields
+      setAmount('');
+      setDescription('');
+      setSelectedSource(null);
+      setSelectedProject(null);
+      setSelectedObligation(null);
+      setType(initialType);
+      setNature('cash');
+      setPickerType(null);
     }
   }, [visible]);
 
@@ -100,8 +109,10 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'expens
       ]);
       setCurrencies(curr);
       setSources(src);
-      setProjects(proj);
-      setObligations(obl);
+      // Filter out completed projects
+      setProjects(proj.filter(p => p.status !== 'completed'));
+      // Filter out settled obligations
+      setObligations(obl.filter(o => o.remaining_amount > 0));
 
       // Defaults
       if (curr.length > 0) setSelectedCurrency(curr.find(c => c.is_main) || curr[0]);
@@ -135,19 +146,20 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'expens
       });
       
       Alert.alert('Succès', 'Transaction enregistrée avec succès !');
+      triggerRefresh();
       onClose();
       // Reset form
       setAmount('');
       setDescription('');
     } catch (error: any) {
-      if (error.message === 'BUDGET_EXCEEDED') {
+      if (error.message === 'INSUFFICIENT_FUNDS_MIGRATION_REQUIRED' || error.message === 'BUDGET_EXCEEDED') {
         Alert.alert(
-          'Budget insuffisant',
-          'Le solde de ce budget est trop bas pour cette dépense.',
+          'Solde insuffisant',
+          'Le solde cumulé des portefeuilles liés est insuffisant pour ce paiement.',
           [
             { text: 'Annuler', style: 'cancel' },
             { 
-              text: 'Gérer le Budget', 
+              text: 'Migrer des fonds', 
               onPress: () => {
                 onClose();
                 navigation.navigate('BudgetManagement');
@@ -301,14 +313,12 @@ export const TransactionModal = ({ visible, onClose, type: initialType = 'expens
               <View style={styles.row}>
                 <TouchableOpacity 
                    onPress={() => {
-                     if (pickerType === 'currency') setShowAddCurrency(true);
-                     if (pickerType === 'project') setShowAddProject(true);
-                     if (pickerType === 'source') setShowAddSource(true);
-                     if (pickerType === 'obligation') {
-                      setNewObligationType(type === 'income' ? 'receivable' : 'debt');
-                      setNewObligationSkipImpact(false);
-                      setShowAddObligation(true);
-                    }
+                     setPickerType(null);
+                     onClose();
+                     if (pickerType === 'currency') navigation.navigate('Currencies');
+                     if (pickerType === 'project') navigation.navigate('Projects');
+                     if (pickerType === 'source') navigation.navigate('Sources');
+                     if (pickerType === 'obligation') navigation.navigate('Obligations');
                    }}
                    style={[styles.quickAddBtn, { backgroundColor: colors.accent + '15' }]}
                 >

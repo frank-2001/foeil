@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -26,12 +26,14 @@ import {
   Target,
   BarChart2,
   PieChart,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { formatCompactNumber } from '../utils/formatters';
 import { useTheme } from '../context/ThemeContext';
+import { SyncService } from '../services/SyncService';
 
 const { width } = Dimensions.get('window');
 
@@ -65,6 +67,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center',
     borderWidth: 1
+  },
+  syncBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+  syncBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: '900',
   },
   
   healthCard: {
@@ -168,12 +186,14 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { colors, isDark } = useTheme();
+  const [unsyncedCount, setUnsyncedCount] = useState(0);
+   const { colors, isDark, refreshKey } = useTheme();
 
   useFocusEffect(
     useCallback(() => {
       loadStats();
-    }, [])
+      SyncService.pendingCount().then(setUnsyncedCount);
+    }, [refreshKey])
   );
 
   const loadStats = async () => {
@@ -239,8 +259,16 @@ export default function HomeScreen() {
             >
               <BarChart2 stroke={colors.ink} size={22} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionCircleBtn, { backgroundColor: colors.paper, borderColor: colors.border }]} onPress={() => navigation.navigate('Profile')}>
-              <PieChart stroke={colors.ink} size={22} />
+            <TouchableOpacity
+              style={[styles.actionCircleBtn, { backgroundColor: colors.paper, borderColor: unsyncedCount > 0 ? colors.warning : colors.border }]}
+              onPress={() => navigation.navigate('Sync')}
+            >
+              <RefreshCw stroke={unsyncedCount > 0 ? colors.warning : colors.ink} size={20} />
+              {unsyncedCount > 0 && (
+                <View style={[styles.syncBadge, { backgroundColor: colors.warning }]}>
+                  <Text style={styles.syncBadgeText}>{unsyncedCount > 99 ? '99+' : unsyncedCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>

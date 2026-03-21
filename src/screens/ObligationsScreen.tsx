@@ -44,7 +44,7 @@ const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: st
 );
 
 export default function ObligationsScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, refreshKey } = useTheme();
   const [loading, setLoading] = useState(true);
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -66,13 +66,14 @@ export default function ObligationsScreen() {
   
   // History State
   const [historyVisible, setHistoryVisible] = useState(false);
+  const [showSettled, setShowSettled] = useState(false);
   const [selectedObligation, setSelectedObligation] = useState<Obligation | null>(null);
   const [historyTransactions, setHistoryTransactions] = useState<any[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [])
+    }, [refreshKey])
   );
 
   const loadData = async () => {
@@ -207,11 +208,33 @@ export default function ObligationsScreen() {
     );
   }
 
+  const currentObligations = obligations
+    .filter(o => o.remaining_amount > 0)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  
+  const settledObligations = obligations
+    .filter(o => o.remaining_amount <= 0)
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+  const displayData = showSettled ? [...currentObligations, ...settledObligations] : currentObligations;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={obligations}
+        data={displayData}
         ListHeaderComponent={<ScreenHeader title="Mes Obligations" subtitle="Dettes et Créances" colors={colors} />}
+        ListFooterComponent={
+          settledObligations.length > 0 ? (
+            <TouchableOpacity 
+              style={[styles.showSettledBtn, { borderColor: colors.border }]} 
+              onPress={() => setShowSettled(!showSettled)}
+            >
+              <Text style={[styles.showSettledText, { color: colors.textSecondary }]}>
+                {showSettled ? "Masquer les obligations réglées" : `Afficher les obligations réglées (${settledObligations.length})`}
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
         contentContainerStyle={styles.listContent}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
@@ -590,4 +613,14 @@ const styles = StyleSheet.create({
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, alignSelf: 'center', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
   checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
   checkboxLabel: { fontSize: 14, fontWeight: '700' },
+  showSettledBtn: { 
+    marginTop: 20, 
+    paddingVertical: 15, 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderStyle: 'dashed', 
+    borderRadius: 20,
+    marginBottom: 40
+  },
+  showSettledText: { fontSize: 13, fontWeight: '700' },
 });

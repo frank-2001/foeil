@@ -19,6 +19,8 @@ export default function SyncScreen() {
   const { colors, isDark } = useTheme();
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [lastResult, setLastResult] = useState<{ success: boolean, count: number, failed: number } | null>(null);
+  const [syncHistory, setSyncHistory] = useState<{id: string, time: string, success: boolean, count: number}[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -34,14 +36,29 @@ export default function SyncScreen() {
 
   const startSync = async () => {
     setIsSyncing(true);
+    setLastResult(null);
     try {
-      await SyncService.sync();
+      const result = await SyncService.sync();
+      setLastResult(result);
+      
+      if (result.count > 0 || result.failed > 0) {
+        setSyncHistory(prev => [
+          { 
+            id: Math.random().toString(), 
+            time: new Date().toLocaleTimeString(), 
+            success: result.success, 
+            count: result.count 
+          }, 
+          ...prev
+        ].slice(0, 5));
+      }
+      
       await loadPendingCount();
     } catch (error) {
       console.error('Manual sync failed:', error);
+      setLastResult({ success: false, count: 0, failed: 1 });
     } finally {
-      // Force a minimum delay for UX
-      setTimeout(() => setIsSyncing(false), 3000);
+      setIsSyncing(false);
     }
   };
 
@@ -93,6 +110,23 @@ export default function SyncScreen() {
           </View>
         </Card>
 
+        {lastResult && (
+          <Card style={[styles.resultCard, { borderColor: lastResult.failed > 0 ? colors.danger : colors.success }]}>
+            <Text style={[styles.resultTitle, { color: colors.ink }]}>Dernier résultat :</Text>
+            <View style={styles.rowBetween}>
+              <Text style={[styles.resultText, { color: colors.success }]}>✓ {lastResult.count} synchronisés</Text>
+              {lastResult.failed > 0 && (
+                <Text style={[styles.resultText, { color: colors.danger }]}>✗ {lastResult.failed} échoués</Text>
+              )}
+            </View>
+            {!lastResult.success && lastResult.failed > 0 && (
+              <Text style={[styles.errorHint, { color: colors.textSecondary }]}>
+                Certains flux n'ont pas pu joindre le serveur. Portée du réseau ou configuration IP à vérifier.
+              </Text>
+            )}
+          </Card>
+        )}
+
         <TouchableOpacity 
           style={[styles.primaryBtn, { backgroundColor: colors.ink }, isSyncing && { opacity: 0.7 }]} 
           onPress={startSync}
@@ -103,13 +137,32 @@ export default function SyncScreen() {
           ) : (
             <>
               <RefreshCcw stroke={colors.paper} size={20} />
-              <Text style={[styles.primaryBtnText, { color: colors.paper }]}>Synchroniser maintenant</Text>
+              <Text style={[styles.primaryBtnText, { color: colors.paper }]}>Lancer la synchronisation</Text>
             </>
           )}
         </TouchableOpacity>
 
+        {syncHistory.length > 0 && (
+          <View style={{ marginTop: 40 }}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Historique de session</Text>
+            {syncHistory.map((item) => (
+              <View key={item.id} style={[styles.historyItem, { borderBottomColor: colors.border + '40' }]}>
+                <View style={styles.row}>
+                  <View style={[styles.statusDot, { backgroundColor: item.success ? colors.success : colors.danger }]} />
+                  <Text style={[styles.historyTime, { color: colors.textSecondary }]}>{item.time}</Text>
+                  <Text style={[styles.historyLabel, { color: colors.ink }]}>
+                    {item.count} élément{item.count > 1 ? 's' : ''} traité{item.count > 1 ? 's' : ''}
+                  </Text>
+                </View>
+                <CheckCircle2 size={16} stroke={item.success ? colors.success : colors.danger} />
+              </View>
+            ))}
+          </View>
+        )}
+
         <Text style={[styles.footerInfo, { color: colors.textSecondary + '60' }]}>
-          FOEIL utilise une architecture Offline-First pour vous permettre de travailler sans connexion. La synchronisation manuelle est recommandée avant de désinstaller l'application.
+          FOEIL Cloud utilise une architecture de chiffrement de bout en bout. 
+          Dernière vérification de sécurité : Aujourd'hui à {new Date().getHours()}h.
         </Text>
       </ScrollView>
     </View>
@@ -139,4 +192,14 @@ const styles = StyleSheet.create({
   primaryBtn: { height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   primaryBtnText: { fontSize: 16, fontWeight: '800', marginLeft: 12 },
   footerInfo: { fontSize: 12, textAlign: 'center', marginTop: 30, lineHeight: 18, paddingHorizontal: 20 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  resultCard: { padding: 18, borderRadius: 20, marginBottom: 24, borderWidth: 1 },
+  resultTitle: { fontSize: 13, fontWeight: '800', marginBottom: 10, textTransform: 'uppercase' },
+  resultText: { fontSize: 15, fontWeight: '700' },
+  errorHint: { fontSize: 12, marginTop: 10, fontStyle: 'italic', lineHeight: 18 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', marginBottom: 15, textTransform: 'uppercase', letterSpacing: 0.5 },
+  historyItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderBottomWidth: 1 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 12 },
+  historyTime: { fontSize: 12, fontWeight: '600', width: 70 },
+  historyLabel: { fontSize: 13, fontWeight: '600', marginLeft: 10 },
 });

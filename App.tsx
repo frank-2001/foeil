@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, AppState, AppStateStatus } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -14,6 +14,9 @@ import { initDatabase } from './src/database/db';
 import { HeaderMenu } from './src/components/Menu/HeaderMenu';
 import { TransactionModal } from './src/components/Modals/TransactionModal';
 import { NotificationService } from './src/services/NotificationService';
+import { LockScreen } from './src/components/Auth/LockScreen';
+import { VersionService } from './src/services/VersionService';
+import { UpdateModal } from './src/components/Modals/UpdateModal';
 
 // Ecrans
 import HomeScreen from './src/screens/HomeScreen';
@@ -217,6 +220,22 @@ function MainApp() {
 }
 
 export default function App() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<any>(null);
+  const appState = useRef(AppState.currentState);
+
+  // Background version check
+  const verifyVersion = async () => {
+    try {
+      const info = await VersionService.checkForUpdates();
+      if (info) {
+        setUpdateInfo(info);
+      }
+    } catch (e) {
+      console.error("Erreur de verification version", e);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       await initDatabase();
@@ -224,13 +243,43 @@ export default function App() {
       if (granted) {
         await NotificationService.scheduleDailyReminders();
       }
+      
+      // Perform initial version check
+      await verifyVersion();
     };
     init().catch(console.error);
   }, []);
 
+  // Re-lock and Version Check when the app goes background/foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (appState.current === 'active' && nextState.match(/inactive|background/)) {
+        // App going to background — reset lock
+        setIsUnlocked(false);
+      } else if (appState.current.match(/inactive|background/) && nextState === 'active') {
+        // App coming to foreground — check for update silently
+        verifyVersion();
+      }
+      appState.current = nextState;
+    });
+    return () => subscription.remove();
+  }, []);
+
   return (
     <ThemeProvider>
-      <MainApp />
+      {isUnlocked
+        ? <MainApp />
+        : <LockScreen onUnlock={() => setIsUnlocked(true)} />}
+
+      {/* Mandatory Hard Update Modal overlays everything */}
+      {updateInfo && (
+        <UpdateModal 
+          visible={!!updateInfo}
+          latestVersion={updateInfo.latest_version}
+          releaseNotes={updateInfo.release_notes}
+          downloadUrl={updateInfo.download_url}
+        />
+      )}
     </ThemeProvider>
   );
 }

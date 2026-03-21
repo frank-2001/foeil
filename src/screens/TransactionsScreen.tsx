@@ -19,7 +19,7 @@ const ScreenHeader = ({ title, subtitle, colors }: { title: string, subtitle: st
 export default function TransactionsScreen() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, refreshKey } = useTheme();
 
   const handleDelete = (id: number) => {
     Alert.alert(
@@ -47,7 +47,7 @@ export default function TransactionsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadTransactions();
-    }, [])
+    }, [refreshKey])
   );
 
   const loadTransactions = async () => {

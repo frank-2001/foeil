@@ -9,6 +9,8 @@ interface ThemeContextType {
   isDark: boolean;
   setDarkMode: (value: boolean) => void;
   toggleTheme: () => void;
+  refreshKey: number;
+  triggerRefresh: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemScheme = useColorScheme();
   const [isDark, setIsDark] = useState(systemScheme === 'dark');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setIsDark(systemScheme === 'dark');
@@ -25,9 +28,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setDarkMode = (value: boolean) => setIsDark(value);
   const toggleTheme = () => setIsDark(!isDark);
+  const triggerRefresh = () => setRefreshKey(prev => prev + 1);
 
   return (
-    <ThemeContext.Provider value={{ colors, isDark, setDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ colors, isDark, setDarkMode, toggleTheme, refreshKey, triggerRefresh }}>
       {children}
     </ThemeContext.Provider>
   );

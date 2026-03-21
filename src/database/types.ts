@@ -12,6 +12,7 @@ export interface Source {
   type: 'income' | 'expense' | 'both';
   category?: 'essential' | 'personal' | 'investment';
   project_id?: number;
+  created_at?: string;
 }
 
 export interface Project {
@@ -33,6 +34,7 @@ export interface Obligation {
   project_id?: number;
   due_date: string;
   budget_allocation?: string;
+  created_at?: string;
   paid_from_transactions?: number;
   transaction_count?: number;
 }

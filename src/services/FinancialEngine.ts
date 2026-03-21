@@ -63,7 +63,7 @@ export class FinancialEngine {
         );
         if (obl) {
           if (obl.budget_allocation) {
-            budgets = obl.budget_allocation.split(',') as any;
+            budgets = obl.budget_allocation.split(',').map(s => s.trim()).filter(Boolean) as any;
           }
           // Update remaining amount
           await db.runAsync(
@@ -106,25 +106,56 @@ export class FinancialEngine {
           );
         }
       } else {
-        // Hard Budget Limit Policy
+        // --- IMPROVED MULTI-BUDGET DEDUCTION ---
         const balance = await db.getFirstAsync<any>('SELECT * FROM savings_balance LIMIT 1');
-        const targetCategory = data.category || 'essential';
-        const col = targetCategory === 'essential' ? 'total_essential' : (targetCategory === 'personal' ? 'total_personal' : 'total_investment');
-        const available = balance[col] || 0;
+        
+        // Ensure budgets are parsed and unique
+        const cleanBudgets = (data.obligation_id && budgets.length > 0) 
+          ? Array.from(new Set(budgets)) 
+          : [data.category || 'essential'];
 
-        if (amount_main > available) {
-          // Log failed attempt
+        const budgetCols = cleanBudgets.map(b => 
+          b === 'essential' ? 'total_essential' : (b === 'personal' ? 'total_personal' : 'total_investment')
+        ) as ("total_essential" | "total_personal" | "total_investment")[];
+
+        const totalAvailable = budgetCols.reduce((sum, col) => sum + (balance[col] || 0), 0);
+
+        if (amount_main > totalAvailable + 0.01) {
           await db.runAsync(
             'INSERT INTO budget_alerts (severity, message) VALUES (?, ?)',
-            ['danger', `Refus : Tentative de dépense de ${amount_main.toFixed(2)} sur ${targetCategory} (Solde: ${available.toFixed(2)})`]
+            ['danger', `Échec : ${amount_main.toFixed(0)} requis sur ${cleanBudgets.join('+')} (Dispo: ${totalAvailable.toFixed(0)})`]
           );
-          throw new Error('BUDGET_EXCEEDED');
+          throw new Error('INSUFFICIENT_FUNDS_MIGRATION_REQUIRED');
         }
 
-        // Standard deduction
+        let remainingToPay = amount_main;
+        let currentBalances = { ...balance };
+        let activeCols = [...budgetCols];
+
+        // Loop until paid or impossible
+        while (remainingToPay > 0.01 && activeCols.length > 0) {
+          const fairShare = remainingToPay / activeCols.length;
+          let nextCols: ("total_essential" | "total_personal" | "total_investment")[] = [];
+          let totalDeductedThisRound = 0;
+
+          for (const col of activeCols) {
+            const avail = currentBalances[col] || 0;
+            const toDeduct = Math.min(avail, fairShare);
+            
+            currentBalances[col] -= toDeduct;
+            totalDeductedThisRound += toDeduct;
+            
+            if (currentBalances[col] > 0.01) {
+              nextCols.push(col);
+            }
+          }
+          remainingToPay -= totalDeductedThisRound;
+          activeCols = nextCols;
+        }
+
         await db.runAsync(
-          `UPDATE savings_balance SET ${col} = ${col} - ?, last_update = CURRENT_TIMESTAMP`,
-          [amount_main]
+          `UPDATE savings_balance SET total_essential = ?, total_personal = ?, total_investment = ?, last_update = CURRENT_TIMESTAMP`,
+          [currentBalances.total_essential, currentBalances.total_personal, currentBalances.total_investment]
         );
       }
       
@@ -277,26 +308,46 @@ export class FinancialEngine {
       
       let totalWeight = 0;
       selectedBudgets.forEach(b => {
-        totalWeight += weights[b as keyof typeof weights] || 0;
+        totalWeight += weights[b.trim() as keyof typeof weights] || 0;
       });
 
       if (totalWeight > 0 && initial_remaining > 0 && !data.skipBalanceImpact) {
         if (data.type === 'receivable') {
-          // Hard Limit for opening receivables
+          // Multi-budget Deduction for opening receivables
           const balance = await db.getFirstAsync<any>('SELECT * FROM savings_balance LIMIT 1');
-          const targetCategory = selectedBudgets[0] as any || 'essential';
-          const col = targetCategory === 'essential' ? 'total_essential' : (targetCategory === 'personal' ? 'total_personal' : 'total_investment');
-          const available = balance[col] || 0;
+          const budgetCols = selectedBudgets.map(b => 
+            b.trim() === 'essential' ? 'total_essential' : (b.trim() === 'personal' ? 'total_personal' : 'total_investment')
+          ) as ("total_essential" | "total_personal" | "total_investment")[];
 
-          if (initial_remaining > available) {
-            await db.runAsync(
-              'INSERT INTO budget_alerts (severity, message) VALUES (?, ?)',
-              ['danger', `Refus Ouverture Créance ${data.name} : ${initial_remaining.toFixed(0)} demandés sur ${targetCategory} (Solde: ${available.toFixed(0)})`]
-            );
+          const totalAvailable = budgetCols.reduce((sum, col) => sum + (balance[col] || 0), 0);
+
+          if (initial_remaining > totalAvailable + 0.01) {
             throw new Error('BUDGET_EXCEEDED');
           }
 
-          await db.runAsync(`UPDATE savings_balance SET ${col} = ${col} - ?, last_update = CURRENT_TIMESTAMP`, [initial_remaining]);
+          let remainingToDeduct = initial_remaining;
+          let currentBalances = { ...balance };
+          let activeCols = [...budgetCols];
+
+          while (remainingToDeduct > 0.01 && activeCols.length > 0) {
+            const fairShare = remainingToDeduct / activeCols.length;
+            let nextCols: ("total_essential" | "total_personal" | "total_investment")[] = [];
+            let deducted = 0;
+            for (const col of activeCols) {
+              const avail = currentBalances[col] || 0;
+              const take = Math.min(avail, fairShare);
+              currentBalances[col] -= take;
+              deducted += take;
+              if (currentBalances[col] > 0.01) nextCols.push(col);
+            }
+            remainingToDeduct -= deducted;
+            activeCols = nextCols;
+          }
+
+          await db.runAsync(
+            `UPDATE savings_balance SET total_essential = ?, total_personal = ?, total_investment = ?, last_update = CURRENT_TIMESTAMP`,
+            [currentBalances.total_essential, currentBalances.total_personal, currentBalances.total_investment]
+          );
         } else {
           // Debt creation (income) always allowed
           for (const b of selectedBudgets) {

@@ -62,12 +62,65 @@ export default function StatsScreen() {
     const months = stats.survivalMonths || 0;
     const debt = stats.obligations?.total_debt || 0;
     const rec = stats.obligations?.total_receivable || 0;
-    const net = stats.totalLiquid - debt + rec;
+    const totalLiquid = stats.totalLiquid || 0;
+    const net = totalLiquid - debt + rec;
+    
+    // Calculate period income vs expense
+    const totalIncome = stats.topIncome?.reduce((sum: number, item: any) => sum + (item.total || 0), 0) || 0;
+    const totalExpense = stats.topExpense?.reduce((sum: number, item: any) => sum + (item.total || 0), 0) || 0;
+    const savingRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0;
 
     return (
       <View>
-        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Analyse Stratégique</Text>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Rapport de Performance</Text>
         
+        {/* --- KPI GRID --- */}
+        <View style={styles.kpiRow}>
+          <Card style={[styles.kpiCard, { backgroundColor: colors.paper }]}>
+            <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>REVENUS ({period})</Text>
+            <Text style={[styles.kpiValue, { color: colors.success }]}>+{totalIncome.toFixed(0)} $</Text>
+          </Card>
+          <Card style={[styles.kpiCard, { backgroundColor: colors.paper }]}>
+            <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>DÉPENSES ({period})</Text>
+            <Text style={[styles.kpiValue, { color: colors.danger }]}>-{totalExpense.toFixed(0)} $</Text>
+          </Card>
+        </View>
+
+        <Card style={styles.insightCard}>
+          <View style={styles.row}>
+            <View style={[styles.iconBox, { backgroundColor: colors.accent + '15' }]}>
+              <ChartIcon size={22} stroke={colors.accent} />
+            </View>
+            <View style={styles.flex1}>
+              <Text style={[styles.insightValue, { color: colors.ink }]}>{savingRate.toFixed(1)}%</Text>
+              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Capacité d'Épargne Réelle</Text>
+            </View>
+          </View>
+          <Text style={[styles.interpretation, { color: colors.textSecondary }]}>
+            {savingRate > 40 ? "Excellent: Vous épargnez une part massive de vos revenus. Votre croissance sera rapide."
+              : (savingRate > 15 ? "Sain: Vous respectez une discipline d'épargne robuste."
+              : "Attention: Votre capital ne se renouvelle pas assez vite. Réduisez vos charges fixes.")
+            }
+          </Text>
+        </Card>
+
+        <View style={styles.kpiRow}>
+          <Card style={[styles.kpiCard, { backgroundColor: colors.paper }]}>
+            <View style={styles.rowSmall}>
+               <TrendingDown size={14} stroke={colors.danger} />
+               <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>DETTES</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: colors.ink }]}>{debt.toFixed(0)} $</Text>
+          </Card>
+          <Card style={[styles.kpiCard, { backgroundColor: colors.paper }]}>
+            <View style={styles.rowSmall}>
+               <TrendingUp size={14} stroke={colors.success} />
+               <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>CRÉANCES</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: colors.ink }]}>{rec.toFixed(0)} $</Text>
+          </Card>
+        </View>
+
         <Card style={styles.insightCard}>
           <View style={styles.row}>
             <View style={[styles.iconBox, { backgroundColor: colors.success + '15' }]}>
@@ -75,34 +128,32 @@ export default function StatsScreen() {
             </View>
             <View style={styles.flex1}>
               <Text style={[styles.insightValue, { color: colors.ink }]}>{months.toFixed(1)} Mois</Text>
-              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Autonomie Financière (Buffer)</Text>
+              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Indice de Survie (Buffer)</Text>
             </View>
           </View>
           <Text style={[styles.interpretation, { color: colors.textSecondary }]}>
-            {months > 6 ? "Position Solide: Vous pouvez maintenir votre niveau de vie actuel pendant plus de 6 mois sans revenus." 
-              : (months > 2 ? "Position Stable: Votre réserve couvre vos besoins immédiats mais reste fragile."
-              : "Alerte: Votre buffer est trop faible. Augmentez votre épargne de précaution.")
-            }
+            Basé sur votre moyenne de dépenses mensuelles (${(stats.monthlyBurn || 0).toFixed(0)}/mois), votre réserve actuelle de ${totalLiquid.toFixed(0)}$ vous couvre pendant {months.toFixed(1)} mois.
           </Text>
         </Card>
 
         <Card style={styles.insightCard}>
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: colors.accent + '15' }]}>
-              <TrendingUp size={22} stroke={colors.accent} />
+            <View style={[styles.iconBox, { backgroundColor: colors.ink + '10' }]}>
+              <Briefcase size={22} stroke={colors.ink} />
             </View>
             <View style={styles.flex1}>
               <Text style={[styles.insightValue, { color: colors.ink }]}>{net.toFixed(0)} $</Text>
-              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Patrimoine Net Estimé (Cash + Oblig.)</Text>
+              <Text style={[styles.insightLabel, { color: colors.textSecondary }]}>Patrimoine Cash Net</Text>
             </View>
           </View>
-          <Text style={[styles.interpretation, { color: colors.textSecondary }]}>
-            Ratio Dettes/Créances: {((debt/(rec||1))*100).toFixed(0)}%. 
-            {debt > rec ? " Votre niveau d'endettement est supérieur à vos créances. Priorisez le remboursement." : " Vos actifs (créances) couvrent vos dettes. C'est un indicateur de bonne santé."}
-          </Text>
+          <View style={[styles.statusBadge, { backgroundColor: net > 0 ? colors.success + '20' : colors.danger + '20' }]}>
+             <Text style={[styles.statusBadgeText, { color: net > 0 ? colors.success : colors.danger }]}>
+                {net >= totalLiquid ? "ACTIF NET POSITIF" : "CAPITAL SOUS PRESSION"}
+             </Text>
+          </View>
         </Card>
 
-        <Text style={[styles.sectionTitle, { marginTop: 20, color: colors.ink }]}>Réalité vs Objectif (Dépenses)</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 25, color: colors.ink }]}>Respect des Piliers (Dépenses)</Text>
         <Card style={styles.statCard}>
           {['essential', 'personal', 'investment'].map((cat) => {
             const actual = stats.distribution?.find((d: any) => d.category === cat)?.total || 0;
@@ -114,15 +165,19 @@ export default function StatsScreen() {
             return (
               <View key={cat} style={{ marginBottom: 15 }}>
                 <View style={styles.rowBetween}>
-                  <Text style={[styles.catName, { color: colors.ink }]}>{cat.toUpperCase()}</Text>
-                  <Text style={[styles.pctText, { color: colors.accent }]}>{pctActual.toFixed(1)}% <Text style={{fontSize: 10, color: colors.textSecondary}}>(Cible: {target}%)</Text></Text>
+                  <Text style={[styles.catName, { color: colors.ink }]}>
+                    {cat === 'essential' ? 'Essentiel (30%)' : (cat === 'personal' ? 'Plaisir (30%)' : 'Épargne (40%)')}
+                  </Text>
+                  <Text style={[styles.pctText, { color: Math.abs(drift) > 10 ? colors.danger : colors.ink }]}>
+                    {pctActual.toFixed(1)}%
+                  </Text>
                 </View>
                 <View style={[styles.progressBg, { backgroundColor: colors.background }]}>
-                  <View style={[styles.progressFill, { width: `${pctActual}%`, backgroundColor: Math.abs(drift) > 10 ? colors.danger : colors.accent }]} />
+                  <View style={[styles.progressFill, { width: `${Math.min(100, pctActual)}%`, backgroundColor: Math.abs(drift) > 10 ? colors.danger : (cat === 'investment' ? colors.success : colors.accent) }]} />
                 </View>
-                {Math.abs(drift) > 5 && (
-                  <Text style={[styles.driftText, { color: drift > 0 ? colors.danger : colors.success }]}>
-                    {drift > 0 ? `Surconsommation de ${drift.toFixed(1)}%` : `Sous-budget de ${Math.abs(drift).toFixed(1)}%`}
+                {Math.abs(drift) > 2 && (
+                  <Text style={[styles.driftText, { color: drift > 10 ? colors.danger : (drift < -10 ? colors.warning : colors.textSecondary) }]}>
+                    {drift > 0 ? `+${drift.toFixed(1)}% au-dessus de la cible` : `${drift.toFixed(1)}% en dessous de la cible`}
                   </Text>
                 )}
               </View>
@@ -293,9 +348,17 @@ const styles = StyleSheet.create({
   pctText: { fontSize: 14, fontWeight: '900' },
   driftText: { fontSize: 11, fontWeight: '700', marginTop: 6 },
   
-  progressBg: { height: 4, borderRadius: 2, marginTop: 12 },
+  progressBg: { height: 6, borderRadius: 3, marginTop: 12 },
   progressBgLarge: { height: 8, borderRadius: 4, marginVertical: 10 },
   progressFill: { height: '100%', borderRadius: 4 },
+
+  kpiRow: { flexDirection: 'row', gap: 10, marginBottom: 15 },
+  kpiCard: { flex: 1, padding: 15, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
+  kpiLabel: { fontSize: 10, fontWeight: '800', marginBottom: 4 },
+  kpiValue: { fontSize: 18, fontWeight: '900' },
+  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 12 },
+  statusBadgeText: { fontSize: 10, fontWeight: '900' },
+  rowSmall: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 
   projectName: { fontSize: 16, fontWeight: '800' },
   projectBudget: { fontSize: 13, fontWeight: '700' },
