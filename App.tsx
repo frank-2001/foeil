@@ -267,9 +267,15 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      {isUnlocked
-        ? <MainApp />
-        : <LockScreen onUnlock={() => setIsUnlocked(true)} />}
+      {/* Always render MainApp to keep navigation state intact */}
+      <MainApp />
+
+      {/* Overlay LockScreen on top when locked */}
+      {!isUnlocked && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]}>
+          <LockScreen onUnlock={() => setIsUnlocked(true)} />
+        </View>
+      )}
 
       {/* Mandatory Hard Update Modal overlays everything */}
       {updateInfo && (

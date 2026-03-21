@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   Animated,
   Image,
+  Alert,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useTheme } from '../../context/ThemeContext';
@@ -41,9 +44,26 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
     return () => pulse.stop();
   }, []);
 
-  // Auto-trigger auth on mount
+  // Auto-trigger auth on mount or when active
   useEffect(() => {
-    authenticate();
+    let isMounted = true;
+
+    const handleAppState = (nextState: AppStateStatus) => {
+      if (nextState === 'active' && isMounted) {
+        authenticate();
+      }
+    };
+    
+    const subscription = AppState.addEventListener('change', handleAppState);
+
+    if (AppState.currentState === 'active') {
+      authenticate();
+    }
+
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
   }, []);
 
   const authenticate = async () => {
@@ -71,7 +91,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
         disableDeviceFallback: false,  // Allow PIN/pattern as fallback
         fallbackLabel: 'Utiliser le code PIN',
       });
-
+      // Alert.alert('result', JSON.stringify(result))
       if (result.success) {
         onUnlock();
       }
@@ -176,7 +196,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.appName}>FOEIL</Text>
-        <Text style={styles.footerText}>Finance OEIL · LACREA DEVS</Text>
+        <Text style={styles.footerText}>LACREA DEVS</Text>
       </View>
     </Animated.View>
   );
